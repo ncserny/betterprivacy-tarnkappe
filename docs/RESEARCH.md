@@ -1,0 +1,65 @@
+# Research notes: a small, fast PII detector
+
+Written 18 November 2026. These notes explain why Tarnkappe is built the way it is.
+
+## Existing open models
+
+Good open PII models exist, but those surveyed are 150M parameters or larger, so none is very fast on a CPU.
+
+| Model | Size | Licence | Notes |
+| --- | --- | --- | --- |
+| [gliner_multi_pii-v1](https://huggingface.co/urchade/gliner_multi_pii-v1) | about 278M parameters (mDeBERTa-v3 base) | Apache 2.0 | Person, organisation, phone, address, email and more in six languages including German. Labels are chosen at request time. Trained on synthetic data; the model card reports no benchmark or speed numbers. |
+| [GLiNER2-PII](https://github.com/fastino-ai/GLiNER2) (`fastino/gliner2-privacy-filter-PII-multi`) | 205M per its repository | Apache 2.0 | Newer generation from the same author, 42 PII types, multilingual. Its authors report higher accuracy than OpenAI's and NVIDIA's models. |
+| [OpenAI Privacy Filter](https://github.com/openai/privacy-filter) | 1.5B (about 50M active) | Apache 2.0 | Primarily English. An [independent test](https://privacybridge-website.pages.dev/articles/openai-privacy-filter-tested/) found no organisation or location label and a median of 3.2 s per document on a laptop CPU. |
+| [NVIDIA GLiNER-PII](https://huggingface.co/nvidia/gliner-PII) | 570M | NVIDIA Open Model License | English, 55+ types. Its card reports strict F1 of 0.87 on its own data and 0.64 on AI4Privacy. |
+
+Three lessons from published benchmarks:
+
+- **Data decides quality more than architecture.** Tonic's [benchmark of OpenAI's model](https://www.tonic.ai/blog/benchmarking-openai-privacy-filter-pii-detection) concludes that models trained on synthetic PII underperform on real documents.
+- **Patterns still win on structured identifiers.** Serious pipelines pair a model with regular expressions and checksums for emails, IBANs and card numbers.
+- **GLiNER-class speed is tens of milliseconds per call**, not one. One [ONNX build of GLiNER2 multi](https://huggingface.co/SemplificaAI/gliner2-multi-v1-onnx) reports about 21 ms on a 16-core desktop CPU.
+
+None of these models has been run against Tarnkappe yet; `scripts/compare_gliner.py` is prepared for that.
+
+## Design: cheap checks first
+
+1. **Patterns and checksums** for email, phone, IBAN, card numbers, IP addresses.
+2. **A small tagger** for names, organisations and addresses. This is the model in this repository.
+3. **A large model as an optional accuracy tier**, for texts where the small model is unsure.
+
+A large model such as GLiNER can also act as a *teacher*: it labels unlabelled text offline, and the small
+model is trained on those labels (knowledge distillation). Tarnkappe v0.2 does not do this yet.
+
+## Training data
+
+Only data whose licence allows open release and commercial use was considered.
+
+| Source | Licence | Used in v0.2 |
+| --- | --- | --- |
+| [UNER English EWT](https://github.com/UniversalNER/UNER_English-EWT) | CC BY-SA 4.0 | yes |
+| [GermEval 2014](https://sites.google.com/site/germeval2014ner/) | CC BY 4.0 | yes |
+| [WNUT 2017](https://github.com/leondz/emerging_entities_17) | CC BY 4.0 | yes |
+| [Presidio Research](https://github.com/microsoft/presidio-research) templates | MIT | yes, half for training, half held out for testing |
+| Generated text (`pii/data.py`) | ours | yes |
+| [NVIDIA Nemotron-PII](https://huggingface.co/blog/nvidia/nemotron-pii) | CC BY 4.0 | no, candidate for a later version |
+| [AI4Privacy pii-masking](https://huggingface.co/datasets/ai4privacy/pii-masking-300k/blob/main/LICENSE.md) | academic and non-commercial only | no, excluded |
+| [WikiNEuRal](https://github.com/Babelscape/wikineural) | CC BY-NC-SA 4.0 | no, excluded |
+
+Because UNER English EWT is share-alike, the model weights are released under CC BY-SA 4.0.
+Creative Commons' [guidance on AI training](https://creativecommons.org/using-cc-licensed-works-for-ai-training-2/)
+describes that as the conservative reading for publicly shared models.
+
+## What two prototype rounds showed
+
+- **v0.1, generated text only.** Strict F1 was 0.99 on familiar sentence patterns with unseen names, but 0.71 on
+  unseen patterns. The model learned the templates, not the language.
+- **v0.2, real labelled text plus pretrained word vectors.** Person F1 of about 0.8 on real English and German
+  test sets, at 1 to 2 ms per sentence. Details in [RESULTS.md](../RESULTS.md).
+
+The step from v0.1 to v0.2 came almost entirely from better data and pretrained input vectors, with the same small architecture.
+
+## Open questions
+
+- How large is the accuracy gap to GLiNER and GLiNER2-PII on the same test sets?
+- Does fine-tuning a small pretrained transformer (`next/finetune_encoder.py`) close most of that gap while staying fast enough?
+- Which languages come next?

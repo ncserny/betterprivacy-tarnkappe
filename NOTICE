@@ -1,5 +1,5 @@
 betterprivacy-tarnkappe
-Copyright 2026 BetterPrivacy
+Copyright 2026 the betterprivacy-tarnkappe authors
 
 Code is licensed under the Apache License, Version 2.0 (see LICENSE).
 Model weights in model/tagger.onnx and model/tagger.int8.onnx are licensed under
