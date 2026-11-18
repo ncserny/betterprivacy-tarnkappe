@@ -1,0 +1,9 @@
+{
+  "PERSON": 0.1,
+  "ORG": 0.2,
+  "LOCATION": 0.1,
+  "STREET": 0.1,
+  "ZIP": 0.25,
+  "EMAIL": 0.6,
+  "PHONE": 0.05
+}

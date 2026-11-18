@@ -12,6 +12,7 @@ adds regex detectors and splits PERSON into FIRST_NAME / LAST_NAME.
 | `tagger.onnx` | Float32 model (10 MB) | CC BY-SA 4.0 |
 | `vectors.npz` | Frozen input word vectors, from spaCy's `en_core_web_md` and `de_core_news_md` | CC0 vectors from MIT-licensed packages |
 | `first_names.txt` | First-name list for the name-splitting rule, sampled from Faker | MIT |
+| `thresholds.json` | Per-type decision thresholds, tuned for recall on development data by `scripts/tune_thresholds.py` | Apache 2.0 |
 | `metrics.json` | Test scores of the float32 model written by `train.py` | Apache 2.0 |
 
 The weights are share-alike because the training data includes UNER English EWT (CC BY-SA 4.0).
@@ -31,9 +32,9 @@ No real personal data was collected for training. No non-commercial datasets wer
 
 ## Evaluation
 
-See [RESULTS.md](../RESULTS.md). In short: strict F1 for persons is 0.82 on English web text and
-German Wikipedia/news, 0.77 on German news, 0.49 on social media. On Presidio test sentences from
-templates unseen in training, 83% of PII is found and 97.5% of flagged spans are real PII.
+See [RESULTS.md](../RESULTS.md). The weights are unchanged since v0.2; v0.3 changes how they are decoded
+(recall-favouring thresholds) and adds phone and postcode rules around them. With those, persons are found
+95.3% of the time in English web text and 94.9% in German Wikipedia/news, but only 63.6% in social-media text.
 
 ## Limits and intended use
 

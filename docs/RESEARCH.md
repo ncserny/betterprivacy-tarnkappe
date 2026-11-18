@@ -58,6 +58,13 @@ describes that as the conservative reading for publicly shared models.
 
 The step from v0.1 to v0.2 came almost entirely from better data and pretrained input vectors, with the same small architecture.
 
+- **v0.3 work, same weights.** Recall-favouring thresholds, libphonenumber and country postcode patterns raised the
+  share of PII found on Presidio's test sentences from 83% to 94%, and of persons in English and German edited text
+  from about 89% to 95%. Informal text stayed poor: 64% of persons found on WNUT 2017.
+- **Transformer reference.** spaCy's RoBERTa-based English pipeline, which never saw these corpora, reaches person F1
+  0.84 on English web text and 0.65 on social media, against 0.77 and 0.50 for Tarnkappe, at about 60 ms per sentence
+  against 1.5 ms. The small model's gap is mostly on informal text, which is what distillation from a larger model should address.
+
 ## Open questions
 
 - How large is the accuracy gap to GLiNER and GLiNER2-PII on the same test sets?

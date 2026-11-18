@@ -126,6 +126,7 @@ def main():
     ap.add_argument("--synthetic", type=int, default=25000)
     ap.add_argument("--presidio", type=int, default=8000)
     ap.add_argument("--epochs", type=int, default=7)
+    ap.add_argument("--extra", nargs="*", default=[], help="JSONL files with extra labelled text (see scripts/distil_label.py)")
     ap.add_argument("--out", default="model")
     a = ap.parse_args()
     random.seed(0); np.random.seed(0); torch.manual_seed(0)
@@ -136,6 +137,10 @@ def main():
     tables = [torch.from_numpy(t) for t in vectors.tables]
     real = corpora.ewt("train") + corpora.germeval("train") + corpora.wnut("train")
     real = lower_some(corpora.join_neighbours(real, rng), rng)
+    for path in a.extra:
+        extra = corpora.jsonl(path)
+        print(f"extra: {len(extra)} examples from {path}")
+        real += extra
     train = encode(real + data.make("train", a.synthetic) + data.make_presidio(a.presidio), vectors)
     NER = ["PERSON", "ORG", "LOCATION"]
     tests = {

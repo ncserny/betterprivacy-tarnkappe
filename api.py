@@ -12,20 +12,20 @@ from pydantic import BaseModel, Field
 
 from pii.detect import Detector
 
-app = FastAPI(title="PII Detector", version="0.2.0")
+app = FastAPI(title="PII Detector", version="0.3.0.dev0")
 detector = Detector()
 
 
 class DetectRequest(BaseModel):
     text: str = Field(..., max_length=100_000)
     redact: bool = False
-    min_score: float = Field(0.5, ge=0, le=1)
+    min_score: Optional[float] = Field(None, ge=0, le=1)
 
 
 class BatchRequest(BaseModel):
     texts: list[str] = Field(..., max_length=256)
     redact: bool = False
-    min_score: float = Field(0.5, ge=0, le=1)
+    min_score: Optional[float] = Field(None, ge=0, le=1)
 
 
 class Entity(BaseModel):

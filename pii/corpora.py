@@ -76,6 +76,17 @@ def presidio(parity=1):
             for x in d if parity is None or x["template_id"] % 2 == parity]
 
 
+def jsonl(path):
+    """Extra training data, e.g. teacher-labelled snippets from scripts/distil_label.py."""
+    from .features import TYPES
+    out = []
+    for line in open(path, encoding="utf-8"):
+        if line.strip():
+            x = json.loads(line)
+            out.append((x["text"], [(a, b, l) for a, b, l in x["spans"] if l in TYPES]))
+    return out
+
+
 def join_neighbours(examples, rng: random.Random, max_n=3):
     """Glue 1..max_n consecutive sentences together so the model also sees longer inputs."""
     out, i = [], 0

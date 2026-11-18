@@ -1,0 +1,15 @@
+{
+  "_comment": "Proposed release bar. 'found' = share of annotated items overlapped by any detection. Measured on the hand-checked test set; a release needs every line met.",
+  "found": {
+    "PERSON": 0.95,
+    "EMAIL": 0.99,
+    "IBAN": 0.99,
+    "PHONE": 0.95,
+    "STREET": 0.90,
+    "ZIP": 0.90,
+    "LOCATION": 0.85,
+    "ORGANIZATION": 0.80
+  },
+  "precision": 0.85,
+  "p50_ms_short_text": 5.0
+}

@@ -1,11 +1,18 @@
-"""End-to-end check of the shipped pipeline (int8 ONNX + regex): samples, accuracy on
-real test sets next to spaCy baselines, PII recall, latency.
+"""End-to-end check of the shipped pipeline (int8 ONNX + patterns): samples, accuracy on
+real test sets next to spaCy baselines, PII recall, the release bar, latency.
 
-    python bench.py            # add --spacy to also run the spaCy baselines
+    python bench.py                              # add --spacy to also run the spaCy baselines
+    python bench.py --testset eval/real_v1.txt   # score a hand-checked test set against the release bar
+    python bench.py --gate                       # exit with an error if the release bar is not met
 """
+import collections
+import json
+import os
 import statistics
 import sys
 import time
+
+from eval import challenge
 
 from pii import corpora, data
 from pii.detect import Detector
@@ -57,8 +64,46 @@ def caught(det, examples, gold_types=None):
     return prf(hit, bad, miss)
 
 
+def release_bar(det, path):
+    """Score a hand-annotated test set against eval/release_bar.json. Returns True if every line is met."""
+    bar = json.load(open(os.path.join(os.path.dirname(__file__), "eval", "release_bar.json")))
+    recs = challenge.load(path)
+    hit, tot = collections.Counter(), collections.Counter()
+    by = collections.defaultdict(lambda: [0, 0])
+    bad = n_ent = 0
+    for x in recs:
+        ents = det.detect(x["text"])
+        for a, b, lab in x["spans"]:
+            ok = any(e["start"] < b and e["end"] > a for e in ents)
+            tot[lab] += 1; hit[lab] += ok
+            for key in (x["lang"], x["category"]):
+                by[key][0] += ok; by[key][1] += 1
+        n_ent += len(ents)
+        bad += sum(not any(e["start"] < b and e["end"] > a for a, b, _ in x["spans"]) for e in ents)
+    print(f"\n== release bar on {os.path.basename(path)} ({len(recs)} records, {sum(tot.values())} annotated items) ==")
+    passed = True
+    for lab in sorted(tot, key=lambda l: -tot[l]):
+        need = bar["found"].get(lab)
+        got = hit[lab] / tot[lab]
+        ok = need is None or got >= need
+        passed &= ok
+        note = "" if tot[lab] >= 20 else "  (few examples)"
+        print(f"   {lab:13s} found {got:6.1%} ({hit[lab]}/{tot[lab]})   bar {need:.0%}   {'PASS' if ok else 'FAIL'}{note}"
+              if need else f"   {lab:13s} found {got:6.1%} ({hit[lab]}/{tot[lab]})")
+    prec = 1 - bad / max(1, n_ent)
+    ok = prec >= bar["precision"]; passed &= ok
+    print(f"   {'precision':13s}       {prec:6.1%}            bar {bar['precision']:.0%}   {'PASS' if ok else 'FAIL'}")
+    print(f"   all items found {sum(hit.values()) / sum(tot.values()):.1%};  by group: " +
+          ", ".join(f"{k} {v[0] / v[1]:.0%}" for k, v in sorted(by.items())))
+    return passed
+
+
 def main():
     det = Detector(threads=1)
+    testset = sys.argv[sys.argv.index("--testset") + 1] if "--testset" in sys.argv else challenge.DEFAULT
+    if "--testset" in sys.argv:
+        ok = release_bar(det, testset)
+        sys.exit(0 if ok or "--gate" not in sys.argv else 1)
     ours = lambda text: {(e["start"], e["end"], e["type"]) for e in det.detect(text, split_names=False)
                          } | set()
     ours_ner = lambda text: {(a, b, {"ORGANIZATION": "ORG"}.get(t, t)) for a, b, t in ours(text)}
@@ -105,12 +150,15 @@ def main():
     for name, ex, types in [("presidio (templates unseen in training)", pres, core),
                             ("our synthetic, new names + new phrasing", data.make("test", 2000, seed=7), None),
                             ("ewt_test persons only", corpora.ewt("test"), {"PERSON"}),
-                            ("germeval_test persons only", corpora.germeval("test"), {"PERSON"})]:
+                            ("germeval_test persons only", corpora.germeval("test"), {"PERSON"}),
+                            ("wnut17_test persons only (social media)", corpora.wnut("test"), {"PERSON"})]:
         p, r, f = caught(det, ex, types)
         print(f"   {name:45s} recall {r:.3f}" + (f"  precision {p:.3f}" if types is None or types is core else ""))
     for t in sorted(core):
         _, r, _ = caught(det, pres, {t})
         print(f"      presidio {t:15s} recall {r:.3f}")
+
+    bar_ok = release_bar(det, testset)
 
     # first / last name split, scored on synthetic text where the truth is known
     fine = data.make("test", 2000, seed=7, fine=True)
@@ -138,6 +186,8 @@ def main():
     long = "\n".join(texts[:60])
     a = time.perf_counter(); det.detect(long); ms = (time.perf_counter() - a) * 1000
     print(f"long document ({len(tokenize(long))} tokens, {len(long)} chars): {ms:.1f} ms")
+    if "--gate" in sys.argv and not bar_ok:
+        sys.exit("release bar not met")
 
 
 if __name__ == "__main__":

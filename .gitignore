@@ -226,3 +226,6 @@ __marimo__/
 data/
 model/tagger.pt
 train.log
+
+# hand-checked test sets built from real pages contain personal data
+eval/real_*.txt

@@ -51,3 +51,23 @@ def test_no_pii():
 def test_batch_and_empty():
     r = client.post("/v1/detect/batch", json={"texts": ["", "Email: bob@web.de"]}).json()
     assert r[0]["entities"] == [] and r[1]["entities"][0]["type"] == "EMAIL"
+
+
+def test_national_phone_formats():
+    got = types("Ruf an: 0171 3920045 oder 030 23125 477. US office (415) 555-0132.")
+    for number in ("0171 3920045", "030 23125 477", "(415) 555-0132"):
+        assert ("PHONE", number) in got
+
+
+def test_postcodes_need_context():
+    got = types("Lieferung an Hauptstraße 12, 50667 Köln. Or 221 Baker Street, London NW1 6XE.")
+    assert ("ZIP", "50667") in got and ("ZIP", "NW1 6XE") in got
+    none = types("In 2019 we sold 12000 units, invoice 45402 from 12.03.2024 at 14:30.")
+    assert not any(t == "ZIP" for t, _ in none)
+
+
+def test_min_score_overrides_tuned_thresholds():
+    text = "Posted by Aylin Demir on Tuesday."
+    strict = client.post("/v1/detect", json={"text": text, "min_score": 0.999999}).json()["entities"]
+    default = client.post("/v1/detect", json={"text": text}).json()["entities"]
+    assert len(default) >= 2 and len(strict) <= len(default)
