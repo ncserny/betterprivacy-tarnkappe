@@ -2,7 +2,7 @@
 
 ## Release bar
 
-`release_bar.json` is the proposed bar for calling a version production-ready. "Found" means an annotated
+`release_bar.json` is the agreed bar for calling a version production-ready. "Found" means an annotated
 item is overlapped by at least one detection, whatever its label.
 
 | Item | Must be found |
@@ -15,8 +15,8 @@ item is overlapped by at least one detection, whatever its label.
 | Organisation | 80% |
 
 In addition at least 85% of detections must be real PII, and the median latency for a short text must stay under 5 ms.
-The bar counts only when measured on a hand-checked set of real pages (below). Change the numbers in the JSON file if
-your risk appetite differs; change them before looking at results, not after.
+The bar counts only when measured on a hand-checked set of real pages (below). If the numbers ever change,
+change them before looking at results, not after.
 
 ## Challenge set v1
 

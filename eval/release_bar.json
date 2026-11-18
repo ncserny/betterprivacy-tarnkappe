@@ -1,5 +1,5 @@
 {
-  "_comment": "Proposed release bar. 'found' = share of annotated items overlapped by any detection. Measured on the hand-checked test set; a release needs every line met.",
+  "_comment": "Release bar, agreed 2026-11-18. 'found' = share of annotated items overlapped by any detection. Measured on the hand-checked test set; a release needs every line met.",
   "found": {
     "PERSON": 0.95,
     "EMAIL": 0.99,

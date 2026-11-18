@@ -134,7 +134,7 @@ reaches person F1 0.84 on EWT and 0.65 on WNUT at about 60 ms per sentence.
 
 ## Release bar
 
-`eval/release_bar.json` holds the proposed bar a version must meet on a **hand-checked test set of real pages**
+`eval/release_bar.json` holds the bar a version must meet on a **hand-checked test set of real pages**
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
