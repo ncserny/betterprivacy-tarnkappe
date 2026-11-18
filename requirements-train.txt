@@ -1,0 +1,6 @@
+-r requirements.txt
+torch
+onnx
+onnxscript
+httpx
+pytest
