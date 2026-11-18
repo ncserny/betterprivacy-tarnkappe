@@ -7,6 +7,7 @@ Every loader returns [(text, [(start, end, label), ...])] with labels PERSON / O
 | UNER German PUD   | news + Wikipedia (test only) | CC BY-SA 4.0 |
 | GermEval 2014     | German Wikipedia + news      | CC BY 4.0    |
 | WNUT 2017         | social media, forums         | CC BY 4.0    |
+| Broad Twitter Corpus | tweets                    | CC BY 4.0    |
 | Presidio synth v2 | generated PII sentences      | MIT          |
 """
 import json
@@ -65,6 +66,15 @@ def germeval(split):  return _load(f"NER-datasets/GermEval2014/NER-de-{split}.ts
 def wnut(split):
     f = {"train": "wnut17train.conll", "dev": "emerging.dev.conll", "test": "emerging.test.annotated"}[split]
     return _load(f"NER-datasets/WNUT17/{f}", 0, 1, WNUT)
+
+
+def btc(split):
+    """Broad Twitter Corpus (Derczynski et al. 2016). Sections a, b, e, g = train; h = dev; f = test."""
+    out = []
+    for sec in {"train": "abeg", "dev": "h", "test": "f"}[split]:
+        out += _load(f"broad_twitter_corpus/{sec}.conll", 0, 1, UNER)
+    # BTC labels @handles as persons; here PERSON means a name, so handle labels are dropped
+    return [(t, [(a, b, l) for a, b, l in s if not t[a:b].startswith("@")]) for t, s in out]
 
 
 def presidio(parity=1):

@@ -39,6 +39,7 @@ Only data whose licence allows open release and commercial use was considered.
 | [UNER English EWT](https://github.com/UniversalNER/UNER_English-EWT) | CC BY-SA 4.0 | yes |
 | [GermEval 2014](https://sites.google.com/site/germeval2014ner/) | CC BY 4.0 | yes |
 | [WNUT 2017](https://github.com/leondz/emerging_entities_17) | CC BY 4.0 | yes |
+| [Broad Twitter Corpus](https://github.com/GateNLP/broad_twitter_corpus) | CC BY 4.0 | yes, since the v0.3 retraining |
 | [Presidio Research](https://github.com/microsoft/presidio-research) templates | MIT | yes, half for training, half held out for testing |
 | Generated text (`pii/data.py`) | ours | yes |
 | [NVIDIA Nemotron-PII](https://huggingface.co/blog/nvidia/nemotron-pii) | CC BY 4.0 | no, candidate for a later version |
@@ -82,6 +83,14 @@ Consequences:
   precise on such text (person recall 0.71 at precision 0.59, strict matching, on WNUT 2017).
 - **A small transformer will not be under 10 ms on modest hardware.** Multilingual MiniLM-class encoders took 17 to 22 ms
   per short text on one core here after int8 quantisation: about ten times slower than Tarnkappe, ten times faster than GLiNER.
+
+## Retraining with tweets
+
+Adding the Broad Twitter Corpus (6,192 human-labelled tweets) and casing augmentation raised the share of persons
+found in social-media text from 64% to 85% (WNUT 2017 test) and in held-out tweets from 35% to 88% (BTC test), with
+1 to 2 points more persons found on edited text at about 3 points lower precision. Person precision on social media
+fell from 55% to 45%, which is still slightly above GLiNER's. TweetNER7, Tweebank-NER and the Temporal Twitter Corpus were not used because their licences
+are not clearly stated; the DFKI SmartData corpus was not used because its labelling rules differ from ours.
 
 ## Open questions
 

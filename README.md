@@ -112,18 +112,20 @@ Measured with `python bench.py --spacy` on 2 CPU cores, one thread, shipped int8
 
 | Test | Found | Clean test? |
 | --- | --- | --- |
-| Persons in English web text (UNER EWT test) | 95.3% | yes |
-| Persons in German Wikipedia/news (GermEval 2014 test) | 94.9% | yes |
-| Persons in social-media text (WNUT 2017 test) | 63.6% | yes |
-| All PII in Microsoft Presidio sentences, templates unseen in training | 94.4% (94.8% of detections are real) | not for phones and postcodes |
-| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 97.8% (93.4% of detections are real) | not for phones and postcodes |
+| Persons in English web text (UNER EWT test) | 95.5% | yes |
+| Persons in German Wikipedia/news (GermEval 2014 test) | 96.3% | yes |
+| Persons in tweets (Broad Twitter Corpus test) | 88.2% | yes |
+| Persons in social-media text (WNUT 2017 test) | 85.1% | yes |
+| All PII in Microsoft Presidio sentences, templates unseen in training | 95.2% (92.7% of detections are real) | not for phones and postcodes |
+| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 96.8% (92.3% of detections are real) | not for phones and postcodes |
 
-On the Presidio set: email, IBAN and IP 100%, person 99%, city/country 98%, credit card 97%, street address 91%,
-organisation 90%, phone 75%, postcode 52%.
+On the Presidio set: email, IBAN and IP 100%, person 99%, credit card 97%, city/country 96%, street address 94%,
+organisation 91%, phone 75%, postcode 70%.
 
-Strict F1 (exact span and type) on persons is 0.77 (EWT), 0.78 (GermEval), 0.76 (PUD) and 0.50 (WNUT). It is lower
-than in v0.2 because the thresholds now favour recall. For reference, spaCy's RoBERTa-based `en_core_web_trf`
-reaches person F1 0.84 on EWT and 0.65 on WNUT at about 60 ms per sentence.
+Next to GLiNER2-PII on the same texts, Tarnkappe finds about as many persons in edited English and German text
+(97 to 99% against 97 to 98%) with about twice the precision, and fewer in social-media text (85% against 96%),
+at under 2 ms per text against about 200 ms. Strict F1 for persons is 0.73 to 0.75 on edited text and 0.50 on WNUT;
+the thresholds favour recall over exact boundaries. Details: [RESULTS.md](RESULTS.md).
 
 | Speed and size | |
 | --- | --- |
@@ -138,15 +140,15 @@ reaches person F1 0.84 on EWT and 0.65 on WNUT at about 60 ms per sentence.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status: **not met.** There is no real-page test set yet, persons in informal text are far below the bar, and phone
+Status: **not met.** There is no real-page test set yet, persons in informal text are at 85 to 88% against a bar of 95%, and phone
 and postcode results are only measured on sets the rules were developed against. See [eval/README.md](eval/README.md)
 for how to build the test set and score against the bar (`python bench.py --testset <file> --gate`).
 
 ## Limits
 
-- **Weak on informal text.** On social-media text it finds 56 to 64% of persons; GLiNER2-PII finds about 96%, though only about 40% of what GLiNER2-PII flags as a person is one. On edited English and German text Tarnkappe finds about as many persons as the GLiNER models with about twice their precision, roughly 100 times faster. Details: [RESULTS.md](RESULTS.md).
+- **Weaker on informal text.** On social-media text it finds about 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
 - **English and German only.**
-- **Weak spots:** informal social-media text, phone numbers from countries outside the configured regions, postcodes in free text without an address around them.
+- **Weak spots:** nicknames and lower-case names in social-media text, phone numbers from countries outside the configured regions, postcodes in free text without an address around them.
 - **More false alarms than v0.2,** by design: the thresholds trade precision for recall.
 - **It will miss things.** Treat it as a data-minimisation aid, not as a guarantee of anonymisation or of legal compliance.
 
@@ -155,7 +157,7 @@ for how to build the test set and score against the bar (`python bench.py --test
 ```bash
 pip install -r requirements-train.txt
 bash scripts/fetch_data.sh        # downloads the public corpora into data/
-python train.py                   # about 30 minutes on 2 CPU cores; writes model/
+python train.py                   # about 35 minutes on 2 CPU cores; writes model/
 python scripts/tune_thresholds.py # re-tune per-type thresholds on dev data; writes model/thresholds.json
 python bench.py                   # samples, accuracy, PII recall, release bar, latency
 python -m pytest tests

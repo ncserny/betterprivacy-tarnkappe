@@ -128,7 +128,7 @@
     }
    }
   },
-  "tarnkappe": {
+  "tarnkappe_before_retrain": {
    "ewt_test": {
     "strict_f1": 0.63,
     "strict_p": 0.589,
@@ -189,6 +189,70 @@
      "IBAN_CODE": 1.0,
      "PHONE_NUMBER": 0.692,
      "ZIP_CODE": 0.571
+    }
+   }
+  },
+  "tarnkappe": {
+   "ewt_test": {
+    "strict_f1": 0.65,
+    "strict_p": 0.605,
+    "strict_r": 0.702,
+    "persons_found": 0.972,
+    "person_precision": 0.755,
+    "ms": 1.5
+   },
+   "wnut17_test": {
+    "strict_f1": 0.451,
+    "strict_p": 0.382,
+    "strict_r": 0.55,
+    "persons_found": 0.849,
+    "person_precision": 0.454,
+    "ms": 1.8
+   },
+   "germeval_test": {
+    "strict_f1": 0.709,
+    "strict_p": 0.64,
+    "strict_r": 0.794,
+    "persons_found": 0.967,
+    "person_precision": 0.762,
+    "ms": 1.8
+   },
+   "pud_de": {
+    "strict_f1": 0.705,
+    "strict_p": 0.65,
+    "strict_r": 0.771,
+    "persons_found": 0.988,
+    "person_precision": 0.823,
+    "ms": 2.0
+   },
+   "challenge_v1": {
+    "found": 0.968,
+    "precision": 0.927,
+    "ms": 2.8,
+    "by_type": {
+     "PERSON": 0.978,
+     "STREET": 0.906,
+     "LOCATION": 0.968,
+     "ZIP": 0.963,
+     "PHONE": 1.0,
+     "ORGANIZATION": 0.943,
+     "EMAIL": 1.0,
+     "IBAN": 1.0
+    }
+   },
+   "presidio_unseen": {
+    "found": 0.947,
+    "precision": 0.936,
+    "ms": 2.0,
+    "by_type": {
+     "PERSON": 0.995,
+     "GPE": 0.945,
+     "ORGANIZATION": 0.928,
+     "STREET_ADDRESS": 0.924,
+     "EMAIL_ADDRESS": 1.0,
+     "IBAN_CODE": 1.0,
+     "PHONE_NUMBER": 0.692,
+     "ZIP_CODE": 0.786
     }
    }
   }
@@ -322,7 +386,7 @@
     }
    }
   },
-  "tarnkappe": {
+  "tarnkappe_before_retrain": {
    "ewt_test": {
     "strict_f1": 0.63,
     "strict_p": 0.589,
@@ -383,6 +447,70 @@
      "IBAN_CODE": 1.0,
      "PHONE_NUMBER": 0.692,
      "ZIP_CODE": 0.571
+    }
+   }
+  },
+  "tarnkappe": {
+   "ewt_test": {
+    "strict_f1": 0.65,
+    "strict_p": 0.605,
+    "strict_r": 0.702,
+    "persons_found": 0.972,
+    "person_precision": 0.755,
+    "ms": 1.5
+   },
+   "wnut17_test": {
+    "strict_f1": 0.451,
+    "strict_p": 0.382,
+    "strict_r": 0.55,
+    "persons_found": 0.849,
+    "person_precision": 0.454,
+    "ms": 1.8
+   },
+   "germeval_test": {
+    "strict_f1": 0.709,
+    "strict_p": 0.64,
+    "strict_r": 0.794,
+    "persons_found": 0.967,
+    "person_precision": 0.762,
+    "ms": 1.8
+   },
+   "pud_de": {
+    "strict_f1": 0.705,
+    "strict_p": 0.65,
+    "strict_r": 0.771,
+    "persons_found": 0.988,
+    "person_precision": 0.823,
+    "ms": 2.0
+   },
+   "challenge_v1": {
+    "found": 0.968,
+    "precision": 0.927,
+    "ms": 2.8,
+    "by_type": {
+     "PERSON": 0.978,
+     "STREET": 0.906,
+     "LOCATION": 0.968,
+     "ZIP": 0.963,
+     "PHONE": 1.0,
+     "ORGANIZATION": 0.943,
+     "EMAIL": 1.0,
+     "IBAN": 1.0
+    }
+   },
+   "presidio_unseen": {
+    "found": 0.947,
+    "precision": 0.936,
+    "ms": 2.0,
+    "by_type": {
+     "PERSON": 0.995,
+     "GPE": 0.945,
+     "ORGANIZATION": 0.928,
+     "STREET_ADDRESS": 0.924,
+     "EMAIL_ADDRESS": 1.0,
+     "IBAN_CODE": 1.0,
+     "PHONE_NUMBER": 0.692,
+     "ZIP_CODE": 0.786
     }
    }
   }

@@ -2,7 +2,7 @@
 
     python scripts/tune_thresholds.py          # writes model/thresholds.json
 
-Dev data: UNER EWT dev, GermEval dev, WNUT 2017 dev (person / organisation / location) and
+Dev data: UNER EWT dev, GermEval dev, WNUT 2017 dev, Broad Twitter Corpus dev (person / organisation / location) and
 generated text with unseen names and phrasing (all types). Test sets are not touched.
 """
 import json
@@ -22,7 +22,7 @@ GRID = [round(x, 2) for x in np.arange(0.05, 0.61, 0.05)]
 
 def main():
     det = Detector()
-    real = corpora.ewt("dev") + corpora.germeval("dev") + corpora.wnut("dev")
+    real = corpora.ewt("dev") + corpora.germeval("dev") + corpora.wnut("dev") + corpora.btc("dev")
     synth = data.make("test", 2500, seed=5)
     cache = []
     for text, spans in real + synth:

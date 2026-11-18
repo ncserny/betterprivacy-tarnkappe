@@ -117,15 +117,29 @@ def evaluate(model, enc, tables, types=TYPES):
     return res
 
 
-def lower_some(examples, rng, p=0.06):
-    return [(t.lower(), s) if rng.random() < p else (t, s) for t, s in examples]
+def casing_noise(examples, rng):
+    """Informal typing: 12% of texts all lower-case, 2% all upper-case, and in a further 12%
+    each entity is lower-cased with probability one half ("met laura becker at Siemens")."""
+    out = []
+    for t, s in examples:
+        k = rng.random()
+        if k < 0.12:
+            t = t.lower()
+        elif k < 0.14:
+            t = t.upper()
+        elif k < 0.26:
+            for a, b, _ in s:
+                if rng.random() < 0.5 and len(t[a:b].lower()) == b - a:
+                    t = t[:a] + t[a:b].lower() + t[b:]
+        out.append((t, s))
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--synthetic", type=int, default=25000)
     ap.add_argument("--presidio", type=int, default=8000)
-    ap.add_argument("--epochs", type=int, default=7)
+    ap.add_argument("--epochs", type=int, default=8)
     ap.add_argument("--extra", nargs="*", default=[], help="JSONL files with extra labelled text (see scripts/distil_label.py)")
     ap.add_argument("--out", default="model")
     a = ap.parse_args()
@@ -135,8 +149,8 @@ def main():
     t0 = time.time()
     vectors = Vectors(os.path.join(a.out, "vectors.npz"))
     tables = [torch.from_numpy(t) for t in vectors.tables]
-    real = corpora.ewt("train") + corpora.germeval("train") + corpora.wnut("train")
-    real = lower_some(corpora.join_neighbours(real, rng), rng)
+    real = corpora.ewt("train") + corpora.germeval("train") + corpora.wnut("train") + corpora.btc("train")
+    real = casing_noise(corpora.join_neighbours(real, rng), rng)
     for path in a.extra:
         extra = corpora.jsonl(path)
         print(f"extra: {len(extra)} examples from {path}")
@@ -148,9 +162,11 @@ def main():
         "germeval_test (German Wikipedia/news)": (encode(corpora.germeval("test"), vectors), NER),
         "pud_de (German news/Wikipedia)": (encode(corpora.pud_de(), vectors), NER),
         "wnut17_test (social media)": (encode(corpora.wnut("test"), vectors), NER),
+        "btc_test (tweets)": (encode(corpora.btc("test"), vectors), NER),
         "synthetic_new_phrasing (PII templates)": (encode(data.make("test", 3000), vectors), TYPES),
     }
-    dev = encode(corpora.ewt("dev") + corpora.germeval("dev") + data.make("test", 1500, seed=5), vectors)
+    dev = encode(corpora.ewt("dev") + corpora.germeval("dev") + corpora.wnut("dev") + corpora.btc("dev")[:1000]
+                 + data.make("test", 1500, seed=5), vectors)
     print(f"data: {len(real)} real + {a.synthetic + a.presidio} synthetic train examples, {len(dev)} dev, {time.time() - t0:.0f}s")
 
     model = Tagger()

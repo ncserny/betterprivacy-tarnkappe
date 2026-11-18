@@ -117,6 +117,7 @@ def main():
 
     sets = [("ewt_test (English web text)", corpora.ewt("test"), "en"),
             ("wnut17_test (social media)", corpora.wnut("test"), "en"),
+            ("btc_test (tweets)", corpora.btc("test"), "en"),
             ("germeval_test (German Wikipedia/news)", corpora.germeval("test"), "de"),
             ("pud_de (German news/Wikipedia)", corpora.pud_de(), "de")]
     systems = [("ours", lambda lang: ours_ner)]
@@ -151,7 +152,8 @@ def main():
                             ("our synthetic, new names + new phrasing", data.make("test", 2000, seed=7), None),
                             ("ewt_test persons only", corpora.ewt("test"), {"PERSON"}),
                             ("germeval_test persons only", corpora.germeval("test"), {"PERSON"}),
-                            ("wnut17_test persons only (social media)", corpora.wnut("test"), {"PERSON"})]:
+                            ("wnut17_test persons only (social media)", corpora.wnut("test"), {"PERSON"}),
+                            ("btc_test persons only (tweets)", corpora.btc("test"), {"PERSON"})]:
         p, r, f = caught(det, ex, types)
         print(f"   {name:45s} recall {r:.3f}" + (f"  precision {p:.3f}" if types is None or types is core else ""))
     for t in sorted(core):
