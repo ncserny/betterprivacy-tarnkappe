@@ -229,3 +229,4 @@ train.log
 
 # hand-checked test sets built from real pages contain personal data
 eval/real_*.txt
+eval/gliner_predictions.json

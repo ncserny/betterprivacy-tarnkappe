@@ -19,7 +19,7 @@ Three lessons from published benchmarks:
 - **Patterns still win on structured identifiers.** Serious pipelines pair a model with regular expressions and checksums for emails, IBANs and card numbers.
 - **GLiNER-class speed is tens of milliseconds per call**, not one. One [ONNX build of GLiNER2 multi](https://huggingface.co/SemplificaAI/gliner2-multi-v1-onnx) reports about 21 ms on a 16-core desktop CPU.
 
-None of these models has been run against Tarnkappe yet; `scripts/compare_gliner.py` is prepared for that.
+Both GLiNER models have since been run against Tarnkappe on the same texts; see "Comparison with GLiNER" below and [RESULTS.md](../RESULTS.md).
 
 ## Design: cheap checks first
 
@@ -65,8 +65,26 @@ The step from v0.1 to v0.2 came almost entirely from better data and pretrained 
   0.84 on English web text and 0.65 on social media, against 0.77 and 0.50 for Tarnkappe, at about 60 ms per sentence
   against 1.5 ms. The small model's gap is mostly on informal text, which is what distillation from a larger model should address.
 
+## Comparison with GLiNER and what it means for distillation
+
+On 400 texts per test set, GLiNER2-PII finds 96 to 98% of annotated persons and Tarnkappe 95 to 97% on edited text,
+but only 56% on social-media text. The GLiNER models pay for their recall with precision: only 31 to 51% of what they
+flag as a person overlaps an annotated person, against 55 to 85% for Tarnkappe. They mark pronouns, common nouns and
+user handles as persons, which GLiNER2-PII's own model card lists as a known limitation. They take about 190 ms per
+text on two CPU cores, against under 2 ms.
+
+Consequences:
+
+- **Do not distil person labels from GLiNER as they are.** A student trained on them would learn to flag "I" and "owner".
+  The teacher is more useful for addresses, postcodes and organisations, where it is strong.
+- **For informal text, human-labelled social-media corpora are the cleaner lever**, followed by fine-tuning a small
+  pretrained transformer on gold data. spaCy's RoBERTa pipeline shows a transformer can be both more complete and more
+  precise on such text (person recall 0.71 at precision 0.59, strict matching, on WNUT 2017).
+- **A small transformer will not be under 10 ms on modest hardware.** Multilingual MiniLM-class encoders took 17 to 22 ms
+  per short text on one core here after int8 quantisation: about ten times slower than Tarnkappe, ten times faster than GLiNER.
+
 ## Open questions
 
-- How large is the accuracy gap to GLiNER and GLiNER2-PII on the same test sets?
+- How do the systems compare on real scanned pages, where the hand-checked test set is still missing?
 - Does fine-tuning a small pretrained transformer (`next/finetune_encoder.py`) close most of that gap while staying fast enough?
 - Which languages come next?

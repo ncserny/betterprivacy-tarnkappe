@@ -11,8 +11,8 @@ data in a text so it can be flagged or hidden.
 - **Private:** runs locally; text is processed in memory and never logged or stored.
 - **Open:** code, weights, training script and benchmark are all in this repository.
 
-> **Status: v0.3 in development, prototype.** Good for its size, not state of the art, not yet compared
-> with larger models such as GLiNER, and not yet at its own [release bar](#release-bar). Read [Limits](#limits) before relying on it.
+> **Status: v0.3 in development, prototype.** Good for its size and on edited text, weak on informal text,
+> and not yet at its own [release bar](#release-bar). Read [Limits](#limits) before relying on it.
 
 ## What it detects
 
@@ -144,7 +144,7 @@ for how to build the test set and score against the bar (`python bench.py --test
 
 ## Limits
 
-- **Not state of the art.** Transformer models are more accurate, especially on informal text, and far slower. The comparison with GLiNER and GLiNER2-PII (`scripts/compare_gliner.py`) has not been run yet.
+- **Weak on informal text.** On social-media text it finds 56 to 64% of persons; GLiNER2-PII finds about 96%, though only about 40% of what GLiNER2-PII flags as a person is one. On edited English and German text Tarnkappe finds about as many persons as the GLiNER models with about twice their precision, roughly 100 times faster. Details: [RESULTS.md](RESULTS.md).
 - **English and German only.**
 - **Weak spots:** informal social-media text, phone numbers from countries outside the configured regions, postcodes in free text without an address around them.
 - **More false alarms than v0.2,** by design: the thresholds trade precision for recall.
@@ -180,8 +180,8 @@ python -m pytest tests
 | `eval/` | Challenge test set, release bar, loader for hand-checked test sets |
 | `scripts/tune_thresholds.py` | Per-type threshold tuning on development data |
 | `scripts/prelabel.py` | Pre-labels raw pages for hand-checking |
-| `scripts/distil_label.py` | Labels text with a teacher model for distillation. GLiNER teachers **not run yet.** |
-| `scripts/compare_gliner.py` | GLiNER and GLiNER2-PII on the same test sets. **Not run yet.** |
+| `scripts/distil_label.py` | Labels text with a teacher model (spaCy, GLiNER, GLiNER2-PII) for distillation |
+| `scripts/compare_gliner.py` | Tarnkappe next to GLiNER and GLiNER2-PII on the same texts |
 | `next/finetune_encoder.py` | Fine-tuning a pretrained transformer encoder. **Not run yet.** |
 
 ## Licence

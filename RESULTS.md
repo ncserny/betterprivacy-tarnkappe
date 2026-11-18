@@ -69,6 +69,44 @@ throughput 557 texts/s, 8906 tokens/s per core
 long document (964 tokens, 4760 chars): 92.0 ms
 ```
 
+## Comparison with GLiNER and GLiNER2-PII
+
+Produced by `python scripts/compare_gliner.py --predict` on the same 2-core machine. 400 randomly drawn texts per test
+set (fixed seed), the full challenge set, GLiNER threshold 0.5, labels given to GLiNER: person, organization, location,
+street address, postal code, phone number, email, iban. Raw scores: `eval/gliner_scores.json`.
+
+"Persons found" = share of annotated persons overlapped by a detection. "Correct" = share of person detections that
+overlap an annotated person.
+
+| Test set | Tarnkappe found / correct | gliner_multi_pii-v1 found / correct | GLiNER2-PII found / correct |
+| --- | --- | --- | --- |
+| English web text (EWT) | 95.8% / 79.1% | 94.4% / 31.4% | 97.2% / 39.7% |
+| German Wikipedia/news (GermEval) | 95.1% / 80.3% | 95.9% / 48.3% | 98.4% / 45.4% |
+| German news (PUD) | 97.0% / 85.0% | 95.1% / 51.4% | 98.2% / 48.0% |
+| Social media (WNUT 2017) | 56.3% / 54.7% | 92.4% / 41.6% | 95.8% / 39.6% |
+
+| All PII, found / detections real | Tarnkappe | gliner_multi_pii-v1 | GLiNER2-PII |
+| --- | --- | --- | --- |
+| Presidio, unseen templates (8 shared types) | 93.5% / 95.3% | 84.1% / 74.7% | 97.8% / 80.2% |
+| Challenge set v1 | 97.8% / 93.8% | 94.6% / 92.4% | 97.0% / 91.2% |
+
+| Speed, ms per text | Tarnkappe | gliner_multi_pii-v1 | GLiNER2-PII |
+| --- | --- | --- | --- |
+| All sets | 1.4 to 2.6 | 186 to 228 | 184 to 215 |
+
+What this shows:
+
+- On edited text Tarnkappe finds about as many persons as the GLiNER models (within 1 to 3 points) with roughly twice
+  their precision, about 100 times faster.
+- On social-media text the GLiNER models find far more persons (92 to 96% against 56%), but only about 40% of what they
+  flag as a person is one. They mark pronouns and common nouns ("I", "owner", "children", "er", "Menschen") and user handles.
+  GLiNER2-PII's model card names this over-prediction of names as a known limitation.
+- With GLiNER2-PII's native name labels (`full_name`, `first_name`, `last_name`) precision improves but recall drops
+  (WNUT sample of 130 texts: 77% found, 44% correct at threshold 0.5; 40% found, 65% correct at 0.9). No setting gave both.
+- GLiNER2-PII is clearly the better of the two, and strong on addresses, postcodes and organisations.
+- Caveats: the corpora annotate only names, so a flagged pronoun counts as wrong even where it refers to a person; the
+  WNUT figures here come from 400 texts and differ from the full-set figures above.
+
 ## Transformer reference
 
 spaCy `en_core_web_trf` (RoBERTa-base, 125M parameters, trained on OntoNotes, not on these corpora), same machine:
@@ -78,7 +116,9 @@ spaCy `en_core_web_trf` (RoBERTa-base, 125M parameters, trained on OntoNotes, no
 | English web text (EWT test) | 0.747 | 0.844 | 0.869 | 59.1 |
 | Social media (WNUT 2017 test) | 0.555 | 0.646 | 0.711 | 73.3 |
 
-GLiNER and GLiNER2-PII have not been measured (no Hugging Face access where this was run).
+Small multilingual encoders, forward pass only, one CPU core on this machine, PyTorch with int8 dynamic quantisation,
+38-token text: distilbert-base-multilingual-cased 21.8 ms, Multilingual-MiniLM-L12-H384 16.8 ms, multilingual-e5-small
+17.7 ms (fp32: 55, 35 and 33 ms). None has been fine-tuned for this task yet.
 
 ## v0.2 for comparison
 
