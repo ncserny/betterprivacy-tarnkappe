@@ -71,17 +71,20 @@ def bare_name(company):
     return name
 
 
-def harvest(text, entities):
-    """Company names worth matching elsewhere in the scan, taken from one page's detections."""
+def harvest(text, entities, confident=None):
+    """Company names worth matching elsewhere in the scan, taken from one page's detections.
+    Names with a legal form ("appstretto UG" -> "appstretto") are returned. Names the tagger is merely
+    very sure about are added to `confident` (a set) instead: detect_scan shares those only when they
+    were found on at least two different pages, so one wrong guess is not spread across the scan."""
     out = set()
     for e in entities:
         if e["type"] != "ORGANIZATION":
             continue
         name = e["text"].strip()
-        if (e.get("source") == "model" and e.get("score", 0) >= SURE and "\n" not in name and 4 <= len(name) <= 40
-                and len(name.split()) <= 4 and (name[0].isupper() or "." in name)
+        if (confident is not None and e.get("source") == "model" and e.get("score", 0) >= SURE and "\n" not in name
+                and 4 <= len(name) <= 40 and len(name.split()) <= 4 and (name[0].isupper() or "." in name)
                 and not all(w.lower() in GENERIC for w in name.split())):
-            out.add(name)                               # a name the tagger is very sure about on this page
+            confident.add(name)
         for line in e["text"].split("\n"):              # a detection can run over several list lines
             name = bare_name(line)
             if not name:
@@ -180,12 +183,20 @@ def apply_known(text, entities, names, person_names=(), split_names=True):
 
 
 def detect_scan(detector, texts, profile_companies=(), profile_names=(), **kwargs):
-    """Detect PII on all pages of one scan, sharing company names between pages.
+    """Detect PII on all pages of one scan, sharing company names between pages. A name with a legal
+    form is shared from one page; a name the tagger is only very sure about must be found on two pages.
     profile_names: the scanned person's own name(s), matched on every page.
     Returns one entity list per text, in order."""
     first = [detector.detect(t, **kwargs) for t in texts]
     names = set(profile_companies)
+    pages_with = {}
     for t, ents in zip(texts, first):
-        names |= harvest(t, ents)
+        confident = set()
+        names |= harvest(t, ents, confident)
+        for n in confident:
+            pages_with[n.lower()] = pages_with.get(n.lower(), set()) | {n}
+            pages_with.setdefault("#" + n.lower(), 0)
+            pages_with["#" + n.lower()] += 1
+    names |= {n for k, v in pages_with.items() if not k.startswith("#") and pages_with["#" + k] >= 2 for n in v}
     split = kwargs.get("split_names", True)
     return [apply_known(t, ents, names, profile_names, split) for t, ents in zip(texts, first)]

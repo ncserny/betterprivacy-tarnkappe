@@ -119,3 +119,19 @@ def test_pages_profile_and_legal_form_rule():
         det.detect(page, profile="nope"); assert False
     except ValueError:
         pass
+
+
+def test_streets_and_user_names_are_never_companies():
+    from tarnkappe.detect import Detector
+    det = Detector()
+    for text in ("Ordination\nObere Feldzeile 12/3\n1070 Wien", "Jana Beispielova\njbeispiel-dev\nFollow", "Twitter: @jbeispiel"):
+        for kw in ({}, {"profile": "pages"}):
+            orgs = [e["text"] for e in det.detect(text, **kw) if e["type"] == "ORGANIZATION"]
+            assert not any(("Feldzeile" in o) or ("jbeispiel" in o) for o in orgs), (text, orgs)
+
+
+def test_confident_names_need_two_pages():
+    from tarnkappe.scan import harvest
+    ents = [{"type": "ORGANIZATION", "text": "Nordwind", "start": 0, "end": 8, "score": 0.99, "source": "model"}]
+    sure = set()
+    assert harvest("Nordwind", ents, sure) == set() and sure == {"Nordwind"}   # collected, not shared on its own

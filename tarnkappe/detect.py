@@ -57,6 +57,28 @@ TITLES = {"mr", "mrs", "ms", "miss", "dr", "prof", "herr", "herrn", "frau", "sir
 PARTICLES = {"von", "van", "de", "der", "den", "del", "della", "di", "da", "le", "la", "zu", "bin", "al", "el", "ten"}
 # model label -> public label
 PUBLIC = {"ORG": "ORGANIZATION"}
+# Never a company: a street name ("Obere Feldzeile", "Hauptstraße 12", "Baker Street") or a user name
+# ("jdoe-dev", "@jdoe", "max_1990").
+STREETISH = re.compile(r"(?i)(?:stra(?:ß|ss)e|str\.|gasse|weg|platz|allee|zeile|ufer|damm|ring|steig|chaussee|kai|"
+                       r"street|st\.|avenue|ave\.?|road|rd\.?|lane|boulevard|blvd\.?|drive|dr\.?)(?:\s+\d+\w?(?:/\d+)?)?$")
+USERNAME = re.compile(r"[a-z0-9]+(?:[-_.][a-z0-9]+)*")
+
+
+def not_a_company(text, s):
+    word = text[s["start"]:s["end"]]
+    if STREETISH.search(word):
+        return True
+    if s["start"] > 0 and text[s["start"] - 1] == "@":
+        return True
+    a, b = s["start"], s["end"]                         # look at the whole word around the span ("jdoe" in "jdoe-dev")
+    while a > 0 and not text[a - 1].isspace():
+        a -= 1
+    while b < len(text) and not text[b].isspace():
+        b += 1
+    whole = text[a:b].rstrip(".,;:!?)")
+    if whole.startswith("@"):
+        return True
+    return bool(USERNAME.fullmatch(whole) and re.search(r"[-_\d]", whole) and "." not in whole)
 
 
 def _luhn(s):
@@ -246,9 +268,14 @@ class Detector:
         from .scan import LEGAL, legal_form_spans
         rx = regex_spans(text, self.phone_regions)
         rx.sort(key=lambda s: s["start"] - s["end"])       # longer regex hit wins
-        model = [s for s in self._model_spans(text, thr)
+        model = self._model_spans(text, thr)
+        for s in model:                                     # a street name is an address, not a company
+            if s["type"] == "ORG" and STREETISH.search(text[s["start"]:s["end"]]):
+                s["type"] = "STREET"
+        model = [s for s in model
                  if re.search(r"[^\W\d_]{2}", text[s["start"]:s["end"]])                    # not just "&", "B" or an emoji
-                 and not (s["type"] == "ORG" and re.fullmatch(LEGAL, text[s["start"]:s["end"]]))]   # not "GmbH" alone
+                 and not (s["type"] == "ORG" and re.fullmatch(LEGAL, text[s["start"]:s["end"]]))   # not "GmbH" alone
+                 and not (s["type"] == "ORG" and not_a_company(text, s))]
         # "<Name> GmbH" is a company by rule, unless the tagger already has a longer company span around it
         rules = [r for r in legal_form_spans(text)
                  if not any(m["type"] == "ORG" and m["start"] <= r["start"] and m["end"] >= r["end"] for m in model)]

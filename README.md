@@ -112,7 +112,8 @@ results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"],
 Detector().detect(text, known_companies=["compuccino"])                           # or for a single text
 ```
 
-Company names the tagger is very sure about on one page are shared across the scan in the same way. `detect_scan`
+Company names the tagger is very sure about are shared in the same way, but only when they were found on two
+different pages, so one wrong guess is not spread across the scan. `detect_scan`
 passes other arguments on to `detect`, so `detect_scan(det, pages, profile="pages", profile_names=[...])` is the
 recommended call for a scan.
 
@@ -149,17 +150,19 @@ Measured with `python bench.py --spacy` on 2 CPU cores, one thread, shipped int8
 On the Presidio set: email, IBAN and IP 100%, person 100%, street address 98%, credit card 97%, organisation 96%,
 city/country 94%, phone 75%, postcode 44% (mostly multi-line addresses from countries the postcode rules do not cover).
 
-**On real scanned web pages** (65 hand-labelled snippets from five BetterPrivacy scans, `pages` profile, each scan
+**On real scanned web pages** (88 hand-labelled snippets from nine BetterPrivacy scans, `pages` profile, each scan
 processed with `detect_scan` and the scanned person's name):
 
 | | Persons found | Person detections correct | Companies found | Company detections correct |
 | --- | --- | --- | --- | --- |
-| Four other people's scans (38 snippets) | 100% | 86.3% | 82.3% | 86.2% |
-| Owner's scan (27 snippets) | 96.4% | 91.7% | 83.7% | 77.8% |
+| Four more scans, clean (23 snippets, answers saved before labelling) | 100% | 93.0% | 92.3% | 34.3% |
+| same, after the fixes made on seeing them | 100% | 93.0% | 84.6% | 45.8% |
+| Four other people's scans (38 snippets, used for tuning) | 100% | 86.3% | 78.5% | 85.2% |
+| Owner's scan (27 snippets, used for tuning) | 96.4% | 91.7% | 83.7% | 77.6% |
 
-These snippets were also used to choose the thresholds and rules, so the figures are development results, not a clean
-test. On the 38 snippets GLiNER2-PII finds 100% of persons and 96% of companies, with 88% and 59% of its detections
-correct, at about 250 ms per snippet against 6 ms.
+**Persons are reliable; company flags are not yet.** On pages that mention few companies, most company hits are wrong
+(medical terms, product names, page text). GLiNER2-PII does no better on the clean set (28% of its company detections
+correct), at about 250 ms per snippet against 6 ms.
 
 The model was retrained for web pages, and that cost accuracy on tweets (persons found fell from 88% to 80%). Strict F1
 for persons is 0.75 to 0.77 on edited text and 0.53 on WNUT; the default thresholds favour recall over exact boundaries.
@@ -204,13 +207,12 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status: **close on development data, not yet shown on clean data.** On 38 hand-labelled snippets from four other
-people's scans (`pages` profile, `detect_scan`, scanned person's name): persons found 100% (bar 95%), companies found
-82% (bar 80%), 86% of person and company detections correct (bar 85%). On the owner's 27 snippets companies found is
-84% but only 78% of company detections are correct. Both sets were used to tune thresholds and rules, so a scan the
-model has never been tuned on is still needed, and phones, postcodes and addresses are not hand-labelled on real pages
-yet. Details and a comparison with GLiNER are in [RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for
-how to score against the bar (`python bench.py --testset <file> --gate`).
+Status for v0.3.0: **met for persons, not for companies.** On 23 snippets from four scans nothing was tuned on, persons
+found is 100% (bar 95%) with 93% of person detections correct (bar 85%); companies found is 92% (bar 80%), but only 34%
+of company detections are correct (46% after the fixes in RESULTS.md; bar 85%). Use company flags as hints, not facts.
+Phones, postcodes and addresses are not hand-labelled on real pages yet. Details and a comparison with GLiNER are in
+[RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
+(`python bench.py --testset <file> --gate`).
 
 ## Long pages
 

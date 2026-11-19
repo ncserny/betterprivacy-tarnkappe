@@ -238,6 +238,37 @@ Read with care:
   discarded.
 - Still missed on pages: site and blog names with no context ("blog.de", "Spreeblick", "WordPress", "GitHub").
 
+## Clean check: four more scans (v0.3.0)
+
+23 snippets from the BetterPrivacy scans of four more people who agreed to be scanned (three gave usable pages, one gave a
+single page, a fifth scan found nothing): doctor directories, personal blogs, a student newspaper, GitHub and two
+people-search pages; 7 German, 16 English. Nothing was tuned on these before the model's answers were saved, and the owner
+labelled persons and companies afterwards. `pages` profile, `detect_scan`, scanned person's name.
+
+| | Persons found | Person detections correct | Companies found | Company detections correct |
+| --- | --- | --- | --- | --- |
+| Tarnkappe, answers saved before labelling | 100% (39/39) | 93.0% | 92.3% (12/13) | 34.3% |
+| GLiNER2-PII, threshold 0.5 | 82.1% | 87.9% | 100% | 27.8% |
+| GLiNER2-PII, threshold 0.8 | 74.4% | 96.7% | 84.6% | 47.4% |
+
+Persons pass the release bar on clean data. Company detections do not: these pages mention few companies, and the model
+flagged medical terms, a place, product names, user names, street names and page text as companies.
+
+Two changes were then made after looking at these errors (so the figures below are development figures):
+
+1. A company name the tagger is only very sure about is shared across a scan only when it is found on **two different
+   pages**. Names with a legal form are still shared from one page.
+2. A street name is never a company: such hits become STREET. A user name ("jdoe-dev", "@jdoe") is never a company.
+
+| After the two changes (`pages` profile, `detect_scan`, person's name) | Persons found | Person detections correct | Companies found | Company detections correct |
+| --- | --- | --- | --- | --- |
+| Four more scans (23 snippets) | 100% | 93.0% | 84.6% | 45.8% |
+| Four other people's scans (38 snippets) | 100% | 86.3% | 78.5% | 85.2% |
+| Owner's scan (27 snippets) | 96.4% | 91.7% | 83.7% | 77.6% |
+
+Company detections remain the weak point: on pages with few real companies most company hits are wrong. Persons, e-mail
+addresses, phone numbers and addresses are the reliable part of v0.3.0.
+
 ## Transformer reference
 
 spaCy `en_core_web_trf` (RoBERTa-base, 125M parameters, trained on OntoNotes, not on these corpora), same machine:
