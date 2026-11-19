@@ -71,3 +71,18 @@ def test_min_score_overrides_tuned_thresholds():
     strict = client.post("/v1/detect", json={"text": text, "min_score": 0.999999}).json()["entities"]
     default = client.post("/v1/detect", json={"text": text}).json()["entities"]
     assert len(default) >= 2 and len(strict) <= len(default)
+
+
+def test_scan_shares_company_names_between_pages():
+    from pii.detect import Detector
+    from pii.scan import bare_name, detect_scan
+    assert bare_name("Nordwind Logistik GmbH & Co. KG") == "Nordwind Logistik"
+    assert bare_name("Agentur GmbH") is None and bare_name("Nordwind") is None
+    pages = ["Impressum\nflowmint UG (haftungsbeschränkt)\nHauptstraße 12, 50667 Köln",
+             "the flowmint-team and flowmint's founders met in Köln. kontakt@flowmint.de"]
+    res = detect_scan(Detector(), pages, profile_companies=["Pixelnest"])
+    second = [(e["type"], e["text"]) for e in res[1]]
+    assert second.count(("ORGANIZATION", "flowmint")) == 2              # both mentions, with or without the list
+    assert ("EMAIL", "kontakt@flowmint.de") in second                   # pattern hits are not overwritten
+    alone = [(e["type"], e["text"]) for e in Detector().detect("ask pixelnest about it", known_companies=["Pixelnest"])]
+    assert ("ORGANIZATION", "pixelnest") in alone

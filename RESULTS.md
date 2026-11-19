@@ -134,6 +134,20 @@ Read with care:
   A handful of leftover marks look like oversights.
 - Almost all missed companies are brand names without a legal suffix, often in lower case.
 
+**Scan-level company matching (`pii/scan.py`), same pages treated as one scan:**
+
+| | Model alone | + names shared across the scan | + three profile names |
+| --- | --- | --- | --- |
+| Companies found | 79.2% | 84.2% | 87.1% |
+| Companies labelled as companies | 68.3% | 77.2% | 80.2% |
+| Company detections that are correct | 80.9% | 79.6% | 79.4% |
+| Persons found | 96.7% | 96.7% | 96.7% |
+| Person detections that are correct | 85.1% | 89.6% | 89.6% |
+
+The shared names came from the pages themselves (for example a company found once with "GmbH" or "UG"); the three
+profile names stand in for employers a person would list in their scan profile. These pages were also used while
+building the feature, so the figures are indicative.
+
 **Tried and not kept:** retraining with about 60 extra sentence patterns for suffix-less, lower-case and listed brand
 names (invented names only). On these pages companies found rose from 79% to 82-86% depending on the threshold, but
 company detections that are correct fell from 81% to 64-75%, more persons were labelled as companies (persons labelled

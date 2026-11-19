@@ -94,6 +94,23 @@ curl -s localhost:8000/v1/detect -H 'content-type: application/json' \
 Interactive API docs are served at `/docs`. The service has no authentication or rate limiting;
 add both before exposing it to the internet.
 
+## Sharing company names across one scan
+
+One person's scan covers many pages that mention the same few companies. `detect_scan` runs the detector on all
+pages, collects every company found with a legal suffix ("appstretto UG"), and then matches the bare name
+("appstretto") on every page. Known names, such as the employers in the person's profile, can be passed in as well.
+
+```python
+from pii import Detector
+from pii.scan import detect_scan
+
+results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"])   # one entity list per page
+Detector().detect(text, known_companies=["compuccino"])                           # or for a single text
+```
+
+No external company database is involved. On the hand-labelled real pages this raised companies found from 79% to 84%
+(87% with three profile names) with no loss for persons; see [RESULTS.md](RESULTS.md).
+
 ## How it works
 
 1. **Patterns, checksums and libphonenumber** catch structured identifiers: email, IBAN, cards, IP addresses, phone numbers.
@@ -186,6 +203,7 @@ python -m pytest tests
 | Path | What |
 | --- | --- |
 | `pii/detect.py` | Runtime: patterns, ONNX model, name splitting, redaction |
+| `pii/scan.py` | Scan-level company matching: share company names between the pages of one scan |
 | `pii/features.py` | Tokeniser, features, word vectors, tag conversion (numpy only) |
 | `pii/data.py` | Synthetic data generator; train and test names and templates are kept disjoint |
 | `pii/corpora.py` | Loaders for the public corpora |

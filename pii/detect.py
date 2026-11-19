@@ -199,8 +199,9 @@ class Detector:
         return [mk("FIRST_NAME", parts[0][1], parts[cut - 1][2]), mk("LAST_NAME", parts[cut][1], parts[-1][2])]
 
     # ---- public API ----
-    def detect(self, text, min_score=None, split_names=True):
-        """min_score: one threshold for all model types (0..1); default: the tuned per-type values."""
+    def detect(self, text, min_score=None, split_names=True, known_companies=()):
+        """min_score: one threshold for all model types (0..1); default: the tuned per-type values.
+        known_companies: names to flag as ORGANIZATION wherever they appear (see pii/scan.py)."""
         thr = None if min_score is None else {t: min_score for t in TYPES}
         rx = regex_spans(text, self.phone_regions)
         rx.sort(key=lambda s: s["start"] - s["end"])       # longer regex hit wins
@@ -219,6 +220,9 @@ class Detector:
         out.sort(key=lambda s: s["start"])
         for s in out:
             s["text"] = text[s["start"]:s["end"]]
+        if known_companies:
+            from .scan import apply_known
+            out = apply_known(text, out, known_companies)
         return out
 
     def redact(self, text, entities=None):
