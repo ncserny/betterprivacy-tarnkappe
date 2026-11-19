@@ -16,8 +16,8 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-from pii import corpora, data
-from pii.features import (CHAR_VOCAB, MAX_CHARS, TAGS, TYPES, VEC_DIM, WORD_BUCKETS, Vectors,
+from tarnkappe import corpora, data
+from tarnkappe.features import (CHAR_VOCAB, MAX_CHARS, TAGS, TYPES, VEC_DIM, WORD_BUCKETS, Vectors,
                           featurize, spans_to_tags, tags_to_spans, tokenize)
 
 
@@ -141,7 +141,7 @@ def main():
     ap.add_argument("--presidio", type=int, default=8000)
     ap.add_argument("--epochs", type=int, default=8)
     ap.add_argument("--extra", nargs="*", default=[], help="JSONL files with extra labelled text (see scripts/distil_label.py)")
-    ap.add_argument("--out", default="model")
+    ap.add_argument("--out", default="tarnkappe/model")
     a = ap.parse_args()
     random.seed(0); np.random.seed(0); torch.manual_seed(0)
     rng = random.Random(0)

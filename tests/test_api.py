@@ -5,8 +5,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from fastapi.testclient import TestClient
 
-from api import app
-from pii.detect import regex_spans
+from tarnkappe.api import app
+from tarnkappe.detect import regex_spans
 
 client = TestClient(app)
 
@@ -74,8 +74,8 @@ def test_min_score_overrides_tuned_thresholds():
 
 
 def test_scan_shares_company_names_between_pages():
-    from pii.detect import Detector
-    from pii.scan import bare_name, detect_scan
+    from tarnkappe.detect import Detector
+    from tarnkappe.scan import bare_name, detect_scan
     assert bare_name("Nordwind Logistik GmbH & Co. KG") == "Nordwind Logistik"
     assert bare_name("Agentur GmbH") is None and bare_name("Nordwind") is None
     pages = ["Impressum\nflowmint UG (haftungsbeschränkt)\nHauptstraße 12, 50667 Köln",

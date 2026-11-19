@@ -1,7 +1,7 @@
 # Tarnkappe PII tagger v0.3 development (model card)
 
 A 2.5M-parameter token tagger for personal data in English and German text.
-Labels: PERSON, ORG, LOCATION, STREET, ZIP, EMAIL, PHONE. The runtime (`pii/detect.py`)
+Labels: PERSON, ORG, LOCATION, STREET, ZIP, EMAIL, PHONE. The runtime (`tarnkappe/detect.py`)
 adds regex detectors and splits PERSON into FIRST_NAME / LAST_NAME.
 
 ## Files and licences
@@ -26,14 +26,14 @@ If you publish a modified version of the weights, it must carry the same licence
 | [GermEval 2014](https://sites.google.com/site/germeval2014ner/), train split | 24,000 German Wikipedia/news sentences | CC BY 4.0 |
 | [WNUT 2017](https://github.com/leondz/emerging_entities_17), train split | 3,395 social-media sentences | CC BY 4.0 |
 | [Broad Twitter Corpus](https://github.com/GateNLP/broad_twitter_corpus), sections a, b, e, g | 6,192 tweets; its @handle labels are not used | CC BY 4.0 |
-| Generated sentences (`pii/data.py`) | 25,000, English and German | ours |
+| Generated sentences (`tarnkappe/data.py`) | 25,000, English and German | ours |
 | [Presidio Research](https://github.com/microsoft/presidio-research) templates (even-numbered), rendered with our values | 8,000 | MIT |
 
 No real personal data was collected for training. No non-commercial datasets were used.
 
 ## Evaluation
 
-See [RESULTS.md](../RESULTS.md). Compared with v0.2 the model was retrained with tweets and casing augmentation
+See [RESULTS.md](../../RESULTS.md). Compared with v0.2 the model was retrained with tweets and casing augmentation
 (12% of real texts lower-cased, entities lower-cased in a further 12%), is decoded with recall-favouring thresholds,
 and has phone and postcode rules around it. Persons are found 95.5% of the time in English web text, 96.3% in German
 Wikipedia/news, 88.2% in tweets and 85.1% in mixed social-media text.

@@ -41,7 +41,7 @@ Only data whose licence allows open release and commercial use was considered.
 | [WNUT 2017](https://github.com/leondz/emerging_entities_17) | CC BY 4.0 | yes |
 | [Broad Twitter Corpus](https://github.com/GateNLP/broad_twitter_corpus) | CC BY 4.0 | yes, since the v0.3 retraining |
 | [Presidio Research](https://github.com/microsoft/presidio-research) templates | MIT | yes, half for training, half held out for testing |
-| Generated text (`pii/data.py`) | ours | yes |
+| Generated text (`tarnkappe/data.py`) | ours | yes |
 | [NVIDIA Nemotron-PII](https://huggingface.co/blog/nvidia/nemotron-pii) | CC BY 4.0 | no, candidate for a later version |
 | [AI4Privacy pii-masking](https://huggingface.co/datasets/ai4privacy/pii-masking-300k/blob/main/LICENSE.md) | academic and non-commercial only | no, excluded |
 | [WikiNEuRal](https://github.com/Babelscape/wikineural) | CC BY-NC-SA 4.0 | no, excluded |

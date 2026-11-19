@@ -1,6 +1,4 @@
+# Runtime only. Installing the package does the same: pip install .
 numpy
 phonenumbers
 onnxruntime
-fastapi
-uvicorn
-faker

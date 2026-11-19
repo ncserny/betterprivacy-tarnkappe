@@ -6,8 +6,8 @@ found once with a legal suffix ("appstretto UG") can then be matched by its bare
 matched directly. This needs no external company database and adds almost no false alarms,
 because every name comes from that person's own results.
 
-    from pii import Detector
-    from pii.scan import detect_scan
+    from tarnkappe import Detector
+    from tarnkappe.scan import detect_scan
     results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"])
 """
 import re

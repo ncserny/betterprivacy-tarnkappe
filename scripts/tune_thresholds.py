@@ -1,6 +1,6 @@
 """Tune one decision threshold per entity type, favouring recall (F2), on development data only.
 
-    python scripts/tune_thresholds.py          # writes model/thresholds.json
+    python scripts/tune_thresholds.py          # writes tarnkappe/model/thresholds.json
 
 Dev data: UNER EWT dev, GermEval dev, WNUT 2017 dev, Broad Twitter Corpus dev (person / organisation / location) and
 generated text with unseen names and phrasing (all types). Test sets are not touched.
@@ -12,9 +12,9 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from pii import corpora, data                      # noqa: E402
-from pii.detect import Detector                    # noqa: E402
-from pii.features import TYPES                     # noqa: E402
+from tarnkappe import corpora, data                      # noqa: E402
+from tarnkappe.detect import Detector                    # noqa: E402
+from tarnkappe.features import TYPES                     # noqa: E402
 
 BETA = 2.0
 GRID = [round(x, 2) for x in np.arange(0.05, 0.61, 0.05)]
@@ -53,7 +53,7 @@ def main():
         result[typ] = best[1]
         table.append((typ, base, best))
         print(f"{typ:9s} at 0.50: P {base[0]:.3f} R {base[1]:.3f}   ->  at {best[1]:.2f}: P {best[2]:.3f} R {best[3]:.3f}")
-    out = os.path.join(os.path.dirname(__file__), "..", "model", "thresholds.json")
+    out = os.path.join(os.path.dirname(__file__), "..", "tarnkappe", "model", "thresholds.json")
     json.dump(result, open(out, "w"), indent=2)
     print("wrote", os.path.normpath(out))
 

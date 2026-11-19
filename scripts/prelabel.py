@@ -17,7 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from eval.challenge import mark          # noqa: E402
-from pii.detect import Detector          # noqa: E402
+from tarnkappe.detect import Detector          # noqa: E402
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

@@ -17,7 +17,7 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from eval import challenge              # noqa: E402
-from pii import corpora                 # noqa: E402
+from tarnkappe import corpora                 # noqa: E402
 
 CACHE = os.path.join(os.path.dirname(__file__), "..", "eval", "gliner_predictions.json")
 LABELS = ["person", "organization", "location", "street address", "postal code", "phone number", "email", "iban"]
@@ -43,7 +43,7 @@ def datasets():
 
 def systems():
     def ours():
-        from pii.detect import Detector
+        from tarnkappe.detect import Detector
         det = Detector()
         back = {"ORGANIZATION": "organization", "LOCATION": "location", "STREET": "street address", "ZIP": "postal code",
                 "PHONE": "phone number", "EMAIL": "email", "IBAN": "iban"}

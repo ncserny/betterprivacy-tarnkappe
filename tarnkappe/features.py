@@ -18,7 +18,7 @@ TYPES = ["PERSON", "ORG", "LOCATION", "STREET", "ZIP", "EMAIL", "PHONE"]
 TAGS = ["O"] + [f"{p}-{t}" for t in TYPES for p in ("B", "I")]
 TAG2ID = {t: i for i, t in enumerate(TAGS)}
 
-DEFAULT_VECTORS = os.path.join(os.path.dirname(__file__), "..", "model", "vectors.npz")
+DEFAULT_VECTORS = os.path.join(os.path.dirname(__file__), "model", "vectors.npz")
 
 
 def tokenize(text):

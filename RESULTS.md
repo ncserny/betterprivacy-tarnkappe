@@ -134,7 +134,7 @@ Read with care:
   A handful of leftover marks look like oversights.
 - Almost all missed companies are brand names without a legal suffix, often in lower case.
 
-**Scan-level company matching (`pii/scan.py`), same pages treated as one scan:**
+**Scan-level company matching (`tarnkappe/scan.py`), same pages treated as one scan:**
 
 | | Model alone | + names shared across the scan | + three profile names |
 | --- | --- | --- | --- |

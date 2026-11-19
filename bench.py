@@ -14,9 +14,9 @@ import time
 
 from eval import challenge
 
-from pii import corpora, data
-from pii.detect import Detector
-from pii.features import tokenize
+from tarnkappe import corpora, data
+from tarnkappe.detect import Detector
+from tarnkappe.features import tokenize
 
 SAMPLES = [
     "Hi, I'm Laura Becker from Nordwind GmbH. You can reach me at laura.becker@nordwind.de or +49 30 1234567.",

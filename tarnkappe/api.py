@@ -1,4 +1,4 @@
-"""HTTP API.   uvicorn api:app --host 0.0.0.0 --port 8000 --workers 2
+"""HTTP API.   uvicorn tarnkappe.api:app --host 0.0.0.0 --port 8000 --workers 2
 
 POST /v1/detect  {"text": "...", "redact": true}
 POST /v1/detect/batch  {"texts": ["...", "..."]}
@@ -10,9 +10,9 @@ from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from pii.detect import Detector
+from .detect import Detector
 
-app = FastAPI(title="PII Detector", version="0.3.0.dev0")
+app = FastAPI(title="PII Detector", version="0.3.0")
 detector = Detector()
 
 

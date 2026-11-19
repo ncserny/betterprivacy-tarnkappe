@@ -224,7 +224,7 @@ __marimo__/
 
 # project
 data/
-model/tagger.pt
+tarnkappe/model/tagger.pt
 train.log
 
 # hand-checked test sets built from real pages contain personal data

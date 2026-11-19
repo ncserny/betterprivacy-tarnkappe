@@ -18,8 +18,10 @@ except ImportError:                     # pragma: no cover
 
 # Countries whose national phone formats are recognised (international "+.." numbers always are).
 PHONE_REGIONS = ("DE", "AT", "CH", "GB", "US")
+# Longest stretch of text given to the model at once (training texts were at most 400 tokens).
+MAX_TOKENS = 320
 
-HERE = os.path.join(os.path.dirname(__file__), "..", "model")
+HERE = os.path.join(os.path.dirname(__file__), "model")
 
 # Structured identifiers: a pattern (plus checksum where one exists) beats any model.
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}")
@@ -141,15 +143,42 @@ class Detector:
 
     # ---- model ----
     def _probs(self, text):
+        """Tag probabilities for every token. Long texts are processed in windows of at most
+        MAX_TOKENS tokens, cut at line or sentence ends, so that the model always sees inputs
+        of the lengths it was trained on and memory use stays flat."""
         toks = tokenize(text)
         if not toks:
             return toks, None
-        strs = [t for t, _, _ in toks]
-        w, c = featurize(strs)
-        v = self.vectors.dense(self.vectors.ids(strs))
-        logits = self.sess.run(None, {"words": w[None], "chars": c[None], "vecs": v[None]})[0][0]
-        e = np.exp(logits - logits.max(-1, keepdims=True))
-        return toks, e / e.sum(-1, keepdims=True)
+        parts = []
+        for a, b in self._windows(text, toks):
+            strs = [t for t, _, _ in toks[a:b]]
+            w, c = featurize(strs)
+            v = self.vectors.dense(self.vectors.ids(strs))
+            logits = self.sess.run(None, {"words": w[None], "chars": c[None], "vecs": v[None]})[0][0]
+            e = np.exp(logits - logits.max(-1, keepdims=True))
+            parts.append(e / e.sum(-1, keepdims=True))
+        return toks, parts[0] if len(parts) == 1 else np.concatenate(parts)
+
+    @staticmethod
+    def _windows(text, toks, max_tokens=None):
+        """Token index ranges [(start, end), ...] covering the text. A window ends at the last
+        line break in its second half, else at the last sentence end there, else at max_tokens."""
+        max_tokens = max_tokens or MAX_TOKENS
+        out, start, n = [], 0, len(toks)
+        while n - start > max_tokens:
+            end, sentence = None, None
+            for i in range(start + max_tokens, start + max_tokens // 2, -1):
+                gap = text[toks[i - 1][2]:toks[i][1]]
+                if "\n" in gap:
+                    end = i
+                    break
+                if sentence is None and toks[i - 1][0] in ".!?" and gap:
+                    sentence = i
+            end = end or sentence or start + max_tokens
+            out.append((start, end))
+            start = end
+        out.append((start, n))
+        return out
 
     @staticmethod
     def decode(toks, probs, thresholds):
@@ -179,7 +208,7 @@ class Detector:
         had_title = False
         while parts and parts[0][0].rstrip(".").lower() in TITLES:
             parts.pop(0); had_title = True
-        before = re.search(r"(\w+)\.?\s*$", text[:s["start"]])
+        before = re.search(r"(\w+)\.?\s*$", text[max(0, s["start"] - 24):s["start"]])   # a title just before the name
         had_title = had_title or bool(before and before.group(1).lower() in TITLES)
         if not parts:
             return []
@@ -201,7 +230,7 @@ class Detector:
     # ---- public API ----
     def detect(self, text, min_score=None, split_names=True, known_companies=()):
         """min_score: one threshold for all model types (0..1); default: the tuned per-type values.
-        known_companies: names to flag as ORGANIZATION wherever they appear (see pii/scan.py)."""
+        known_companies: names to flag as ORGANIZATION wherever they appear (see tarnkappe/scan.py)."""
         thr = None if min_score is None else {t: min_score for t in TYPES}
         rx = regex_spans(text, self.phone_regions)
         rx.sort(key=lambda s: s["start"] - s["end"])       # longer regex hit wins

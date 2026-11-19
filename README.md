@@ -31,15 +31,16 @@ data in a text so it can be flagged or hidden.
 ## Quick start
 
 ```bash
-git clone https://github.com/ncserny/betterprivacy-tarnkappe
-cd betterprivacy-tarnkappe
-pip install -r requirements.txt
+pip install "git+https://github.com/ncserny/betterprivacy-tarnkappe"
 ```
+
+The model files come with the package (about 30 MB). For the HTTP API add the extra:
+`pip install "tarnkappe[api] @ git+https://github.com/ncserny/betterprivacy-tarnkappe"`.
 
 ### In Python
 
 ```python
-from pii import Detector
+from tarnkappe import Detector
 
 detector = Detector()
 
@@ -53,7 +54,7 @@ detector.redact("Call Thomas Weber on +49 30 1234567")
 ```
 
 `detect(text, min_score=None, split_names=True)`: by default each entity type uses its own threshold from
-`model/thresholds.json`, tuned to favour finding PII over avoiding false alarms. Pass `min_score` (0 to 1) to use one
+`tarnkappe/model/thresholds.json`, tuned to favour finding PII over avoiding false alarms. Pass `min_score` (0 to 1) to use one
 threshold for all types: higher flags less, lower flags more. With `split_names=False` people are returned as one `PERSON` entity.
 
 National phone formats are recognised for Germany, Austria, Switzerland, the UK and the US by default
@@ -62,8 +63,8 @@ National phone formats are recognised for Germany, Austria, Switzerland, the UK 
 ### As an HTTP API
 
 ```bash
-uvicorn api:app --port 8000
-# or: docker build -t tarnkappe . && docker run -p 8000:8000 tarnkappe
+uvicorn tarnkappe.api:app --port 8000
+# or, from a clone: docker build -t tarnkappe . && docker run -p 8000:8000 tarnkappe
 ```
 
 ```bash
@@ -101,8 +102,7 @@ pages, collects every company found with a legal suffix ("appstretto UG"), and t
 ("appstretto") on every page. Known names, such as the employers in the person's profile, can be passed in as well.
 
 ```python
-from pii import Detector
-from pii.scan import detect_scan
+from tarnkappe import Detector, detect_scan
 
 results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"])   # one entity list per page
 Detector().detect(text, known_companies=["compuccino"])                           # or for a single text
@@ -148,7 +148,7 @@ the thresholds favour recall over exact boundaries. Details: [RESULTS.md](RESULT
 | --- | --- |
 | Short text (16 tokens) | 1.6 ms median, 4.4 ms at p99 |
 | Throughput per core | about 550 texts per second |
-| 960-token document | 92 ms |
+| Long pages | about 14,000 tokens per second: 44 ms for 650 tokens, 1.1 s for 15,000 tokens (66,000 characters) |
 | Memory, start-up | about 270 MB, 1 s |
 
 ## How it is checked by hand
@@ -176,6 +176,12 @@ Status: **not met.** There is no real-page test set yet, persons in informal tex
 and postcode results are only measured on sets the rules were developed against. See [eval/README.md](eval/README.md)
 for how to build the test set and score against the bar (`python bench.py --testset <file> --gate`).
 
+## Long pages
+
+Texts of any length are accepted. Internally a long text is processed in windows of at most 320 tokens, cut at line
+or sentence ends, so the model always sees inputs of the lengths it was trained on and memory use stays flat. Time
+grows in proportion to length. The HTTP API accepts up to 100,000 characters per text.
+
 ## Limits
 
 - **Weaker on informal text.** On social-media text it finds about 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
@@ -187,30 +193,31 @@ for how to build the test set and score against the bar (`python bench.py --test
 ## Train and evaluate
 
 ```bash
-pip install -r requirements-train.txt
+git clone https://github.com/ncserny/betterprivacy-tarnkappe && cd betterprivacy-tarnkappe
+pip install -e ".[train,api]"
 bash scripts/fetch_data.sh        # downloads the public corpora into data/
-python train.py                   # about 35 minutes on 2 CPU cores; writes model/
-python scripts/tune_thresholds.py # re-tune per-type thresholds on dev data; writes model/thresholds.json
+python train.py                   # about 35 minutes on 2 CPU cores; writes tarnkappe/model/
+python scripts/tune_thresholds.py # re-tune per-type thresholds on dev data; writes tarnkappe/model/thresholds.json
 python bench.py                   # samples, accuracy, PII recall, release bar, latency
 python -m pytest tests
 ```
 
 `python bench.py --spacy` adds the spaCy baselines (needs `spacy` and its `sm`/`md` models for English and German).
-`model/vectors.npz` is included; `scripts/export_vectors.py` rebuilds it from spaCy's medium models.
+`tarnkappe/model/vectors.npz` is included; `scripts/export_vectors.py` rebuilds it from spaCy's medium models.
 
 ## Repository layout
 
 | Path | What |
 | --- | --- |
-| `pii/detect.py` | Runtime: patterns, ONNX model, name splitting, redaction |
-| `pii/scan.py` | Scan-level company matching: share company names between the pages of one scan |
-| `pii/features.py` | Tokeniser, features, word vectors, tag conversion (numpy only) |
-| `pii/data.py` | Synthetic data generator; train and test names and templates are kept disjoint |
-| `pii/corpora.py` | Loaders for the public corpora |
+| `tarnkappe/detect.py` | Runtime: patterns, ONNX model, name splitting, redaction |
+| `tarnkappe/scan.py` | Scan-level company matching: share company names between the pages of one scan |
+| `tarnkappe/features.py` | Tokeniser, features, word vectors, tag conversion (numpy only) |
+| `tarnkappe/data.py` | Synthetic data generator; train and test names and templates are kept disjoint |
+| `tarnkappe/corpora.py` | Loaders for the public corpora |
 | `train.py` | Training, evaluation, ONNX export and quantisation |
-| `api.py` | FastAPI service |
+| `tarnkappe/api.py` | FastAPI service |
 | `bench.py` | Benchmark |
-| `model/` | Trained model files and the [model card](model/README.md) |
+| `tarnkappe/model/` | Trained model files and the [model card](tarnkappe/model/README.md) |
 | `docs/RESEARCH.md` | Research notes: existing models, design, data |
 | `eval/` | Challenge test set, release bar, loader for hand-checked test sets |
 | `scripts/tune_thresholds.py` | Per-type threshold tuning on development data |
@@ -221,8 +228,8 @@ python -m pytest tests
 
 ## Licence
 
-- **Code** (everything outside `model/`): [Apache License 2.0](LICENSE).
-- **Model weights** (`model/tagger.onnx`, `model/tagger.int8.onnx`): [CC BY-SA 4.0](model/LICENSE),
+- **Code** (everything outside `tarnkappe/model/`): [Apache License 2.0](LICENSE).
+- **Model weights** (`tarnkappe/model/tagger.onnx`, `tarnkappe/model/tagger.int8.onnx`): [CC BY-SA 4.0](tarnkappe/model/LICENSE),
   because part of the training data (UNER English EWT) is CC BY-SA 4.0. Commercial use is allowed;
   if you publish modified weights they must carry the same licence and the credits.
-- Training-data credits and the licences of the other files in `model/`: [NOTICE](NOTICE) and the [model card](model/README.md).
+- Training-data credits and the licences of the other files in `tarnkappe/model/`: [NOTICE](NOTICE) and the [model card](tarnkappe/model/README.md).
