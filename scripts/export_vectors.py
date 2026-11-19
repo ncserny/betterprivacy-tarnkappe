@@ -28,4 +28,4 @@ for lang, name in [("en", "en_core_web_md"), ("de", "de_core_news_md")]:
     out[f"{lang}_rows"] = np.array(rows, dtype=np.int32)
     out[f"{lang}_table"] = table.astype(np.float16)
     print(lang, "keys", len(words), "table", table.shape)
-np.savez_compressed("model/vectors.npz", **out)
+np.savez_compressed("tarnkappe/model/vectors.npz", **out)

@@ -19,7 +19,7 @@ Three lessons from published benchmarks:
 - **Patterns still win on structured identifiers.** Serious pipelines pair a model with regular expressions and checksums for emails, IBANs and card numbers.
 - **GLiNER-class speed is tens of milliseconds per call**, not one. One [ONNX build of GLiNER2 multi](https://huggingface.co/SemplificaAI/gliner2-multi-v1-onnx) reports about 21 ms on a 16-core desktop CPU.
 
-None of these models has been run against Tarnkappe yet; `scripts/compare_gliner.py` is prepared for that.
+Both GLiNER models have since been run against Tarnkappe on the same texts; see "Comparison with GLiNER" below and [RESULTS.md](../RESULTS.md).
 
 ## Design: cheap checks first
 
@@ -39,8 +39,9 @@ Only data whose licence allows open release and commercial use was considered.
 | [UNER English EWT](https://github.com/UniversalNER/UNER_English-EWT) | CC BY-SA 4.0 | yes |
 | [GermEval 2014](https://sites.google.com/site/germeval2014ner/) | CC BY 4.0 | yes |
 | [WNUT 2017](https://github.com/leondz/emerging_entities_17) | CC BY 4.0 | yes |
+| [Broad Twitter Corpus](https://github.com/GateNLP/broad_twitter_corpus) | CC BY 4.0 | yes, since the v0.3 retraining |
 | [Presidio Research](https://github.com/microsoft/presidio-research) templates | MIT | yes, half for training, half held out for testing |
-| Generated text (`pii/data.py`) | ours | yes |
+| Generated text (`tarnkappe/data.py`) | ours | yes |
 | [NVIDIA Nemotron-PII](https://huggingface.co/blog/nvidia/nemotron-pii) | CC BY 4.0 | no, candidate for a later version |
 | [AI4Privacy pii-masking](https://huggingface.co/datasets/ai4privacy/pii-masking-300k/blob/main/LICENSE.md) | academic and non-commercial only | no, excluded |
 | [WikiNEuRal](https://github.com/Babelscape/wikineural) | CC BY-NC-SA 4.0 | no, excluded |
@@ -58,8 +59,50 @@ describes that as the conservative reading for publicly shared models.
 
 The step from v0.1 to v0.2 came almost entirely from better data and pretrained input vectors, with the same small architecture.
 
+- **v0.3 work, same weights.** Recall-favouring thresholds, libphonenumber and country postcode patterns raised the
+  share of PII found on Presidio's test sentences from 83% to 94%, and of persons in English and German edited text
+  from about 89% to 95%. Informal text stayed poor: 64% of persons found on WNUT 2017.
+- **Transformer reference.** spaCy's RoBERTa-based English pipeline, which never saw these corpora, reaches person F1
+  0.84 on English web text and 0.65 on social media, against 0.77 and 0.50 for Tarnkappe, at about 60 ms per sentence
+  against 1.5 ms. The small model's gap is mostly on informal text, which is what distillation from a larger model should address.
+
+## Comparison with GLiNER and what it means for distillation
+
+On 400 texts per test set, GLiNER2-PII finds 96 to 98% of annotated persons and Tarnkappe 95 to 97% on edited text,
+but only 56% on social-media text. The GLiNER models pay for their recall with precision: only 31 to 51% of what they
+flag as a person overlaps an annotated person, against 55 to 85% for Tarnkappe. They mark pronouns, common nouns and
+user handles as persons, which GLiNER2-PII's own model card lists as a known limitation. They take about 190 ms per
+text on two CPU cores, against under 2 ms.
+
+Consequences:
+
+- **Do not distil person labels from GLiNER as they are.** A student trained on them would learn to flag "I" and "owner".
+  The teacher is more useful for addresses, postcodes and organisations, where it is strong.
+- **For informal text, human-labelled social-media corpora are the cleaner lever**, followed by fine-tuning a small
+  pretrained transformer on gold data. spaCy's RoBERTa pipeline shows a transformer can be both more complete and more
+  precise on such text (person recall 0.71 at precision 0.59, strict matching, on WNUT 2017).
+- **A small transformer will not be under 10 ms on modest hardware.** Multilingual MiniLM-class encoders took 17 to 22 ms
+  per short text on one core here after int8 quantisation: about ten times slower than Tarnkappe, ten times faster than GLiNER.
+
+## Retraining with tweets
+
+Adding the Broad Twitter Corpus (6,192 human-labelled tweets) and casing augmentation raised the share of persons
+found in social-media text from 64% to 85% (WNUT 2017 test) and in held-out tweets from 35% to 88% (BTC test), with
+1 to 2 points more persons found on edited text at about 3 points lower precision. Person precision on social media
+fell from 55% to 45%, which is still slightly above GLiNER's. TweetNER7, Tweebank-NER and the Temporal Twitter Corpus were not used because their licences
+are not clearly stated; the DFKI SmartData corpus was not used because its labelling rules differ from ours.
+
+## First real pages, and a retraining that did not help
+
+On 27 hand-labelled snippets from one real scan, Tarnkappe found 97% of person mentions and 79% of company mentions;
+GLiNER2-PII found 85% and 89%. The missed companies were almost all brand names without a legal suffix. Adding
+synthetic sentences with such names to training raised company recall by 3 to 7 points but produced many more false
+company flags and made the model label some persons as companies, so the change was dropped. Synthetic brand names
+teach the model that any unfamiliar lower-case or capitalised word can be a company; real labelled pages, or a company
+gazetteer, are the more promising routes. Details in [RESULTS.md](../RESULTS.md).
+
 ## Open questions
 
-- How large is the accuracy gap to GLiNER and GLiNER2-PII on the same test sets?
+- How do the systems compare on real scanned pages, where the hand-checked test set is still missing?
 - Does fine-tuning a small pretrained transformer (`next/finetune_encoder.py`) close most of that gap while staying fast enough?
 - Which languages come next?

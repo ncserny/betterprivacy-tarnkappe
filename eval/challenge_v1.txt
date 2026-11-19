@@ -1,0 +1,281 @@
+# Tarnkappe challenge set v1
+# Hand-written, fictional snippets in the style of the pages BetterPrivacy scans.
+# All people, companies, addresses and numbers are invented. Phone numbers use ranges reserved for fiction.
+# Markup: [[P|person]] [[O|organisation]] [[L|city, region or country]] [[S|street + number]] [[Z|postcode]]
+#         [[E|email]] [[T|phone]] [[I|IBAN]]
+# Records are separated by a line with three dashes. First line of a record: @ category | language
+---
+@ people-search | en
+[[P|Margaret Ellison]], age 54, lives at [[S|1482 Sycamore Lane]], [[L|Dayton]], [[L|OH]] [[Z|45402]]. Phone: [[T|(415) 555-0132]]. Possible relatives: [[P|Thomas Ellison]], [[P|Carla Ellison-Reyes]].
+---
+@ people-search | en
+We found 3 records for [[P|Darnell Whitaker]] in [[L|Georgia]]. Current address: [[S|77 Peachtree Court Apt 4B]], [[L|Atlanta]] [[Z|30303]]. Previous cities: [[L|Macon]], [[L|Savannah]].
+---
+@ people-search | en
+[[P|Nguyen Thi Lan]] | [[L|San Jose]], [[L|CA]] | Landline [[T|212-555-0187]] | Email l***@gmail.com | Associated with [[P|Minh Nguyen]] and [[P|Peter Halloran]]
+---
+@ people-search | en
+Background report: [[P|Rose Mark]]
+Also known as: [[P|Rosie Mark]], [[P|Rose M. Baker]]
+Lived in: [[L|Leeds]], [[L|Bradford]]
+Phone numbers: [[T|0161 496 0735]], [[T|020 7946 0312]]
+---
+@ people-search | de
+[[P|Hans-Jürgen Breitenbach]], [[Z|01067]] [[L|Dresden]], [[S|Wilsdruffer Straße 14]]. Telefon: [[T|0351 4710 88]]. Weitere Personen im Haushalt: [[P|Sabine Breitenbach]].
+---
+@ people-search | de
+Personensuche: 2 Treffer für [[P|Aylin Yıldırım]] in [[L|Köln]]. Adresse: [[S|Venloer Str. 211]], [[Z|50823]] [[L|Köln]]. Mobil: [[T|0171 3920045]].
+---
+@ people-search | de
+[[P|Wolf Bäcker]] (geb. 1961) wohnt laut Telefonbuch in der [[S|Gartenstraße 3a]] in [[Z|72074]] [[L|Tübingen]]. Tel. [[T|07071 4710 12]]
+---
+@ people-search | en
+Is this the [[P|Olusegun Adeyemi]] you are looking for? Lives in [[L|Houston]], [[L|Texas]]. Works at [[O|Brightwater Logistics]]. Mobile [[T|+1 617 555 0119]].
+---
+@ data-broker | en
+Consumer profile
+Name: [[P|Jennifer Kowalczyk]]
+Address: [[S|903 W Addison St]], [[L|Chicago]], [[L|IL]] [[Z|60613]]
+Email: [[E|jen.kowalczyk84@outlook.com]]
+Phone: [[T|(312) 555-0164]]
+Homeowner: yes | Estimated income: $75,000-$99,999
+---
+@ data-broker | en
+Lead #48213 - [[P|Rajesh Subramanian]], IT Director at [[O|Corvane Systems]], [[E|r.subramanian@corvane.io]], direct [[T|+1 212 555 0143]], HQ [[L|Austin]], [[L|TX]]
+---
+@ data-broker | en
+"[[P|Siobhan O'Connell]]","[[S|12 Harbour View]]","[[L|Cork]]","[[Z|T12 X8PN]]","[[E|siobhan.oc@eircom.net]]","[[T|+353 21 555 0170]]","opted_in"
+---
+@ data-broker | de
+Datensatz 7731: Dr. [[P|Katharina Vogelsang]], Zahnärztin, [[O|Zahnarztpraxis am Stadtpark]], [[S|Parkallee 27]], [[Z|28209]] [[L|Bremen]], [[E|praxis@zahnarzt-stadtpark.de]], Tel. [[T|0421 4710 300]]
+---
+@ data-broker | de
+Kontakt: [[P|Mehmet Öztürk]] | Position: Einkaufsleiter | Firma: [[O|Rheintal Verpackungen GmbH & Co. KG]] | E-Mail: [[E|m.oeztuerk@rheintal-verpackungen.de]] | Durchwahl: [[T|0221 4710 322]]
+---
+@ data-broker | de
+Haushaltsdaten: Familie [[P|Kowalski]], [[S|Am Mühlenbach 9]], [[Z|33602]] [[L|Bielefeld]]. Kaufkraft: überdurchschnittlich. Ansprechpartnerin: [[P|Agnieszka Kowalski]].
+---
+@ data-broker | en
+Email append result: [[E|tom.baker1972@yahoo.co.uk]] -> [[P|Thomas Baker]], [[S|4 Mill Road]], [[L|Norwich]] [[Z|NR2 3LP]]
+---
+@ data-broker | en
+Voter file extract: [[P|WASHINGTON, DENISE L]] - [[S|2210 MAPLE AVE]] - [[L|RICHMOND]] [[L|VA]] [[Z|23220]] - registered 2008
+---
+@ search-engine | en
+[[P|Laura Bennett]] - Senior Accountant - [[O|Hartwell & Finch LLP]] | Professional profile. View [[P|Laura Bennett]]'s profile. Location: [[L|Manchester]], [[L|United Kingdom]]. 500+ connections.
+---
+@ search-engine | en
+[[P|Carlos Mendoza]] obituary - [[L|Tucson]], [[L|Arizona]]. [[P|Carlos]] is survived by his wife [[P|Elena]] and his children [[P|Sofia]] and [[P|Mateo]]. Services will be held Friday.
+---
+@ search-engine | en
+Images for [[P|priya raman]] [[L|toronto]] ... [[P|priya raman]] (@priyacooks) posted: new recipe up on the blog! ... [[P|Priya Raman]], Registered Dietitian, [[O|Lakeshore Wellness Clinic]]
+---
+@ search-engine | de
+[[P|Stefan Hofmeister]] – Geschäftsführer – [[O|Hofmeister Haustechnik GmbH]] | XING. Standort: [[L|Regensburg]], [[L|Bayern]]. Ich biete: Heizung, Sanitär, Solar.
+---
+@ search-engine | de
+Traueranzeige [[P|Elfriede Sommer]] geb. [[P|Krüger]] - In stiller Trauer: [[P|Dieter Sommer]], [[P|Anke]] und [[P|Jörg]] mit Familien. [[L|Lüneburg]], im Oktober.
+---
+@ search-engine | de
+[[P|Lena Fischer]] ([[L|Hamburg]]) - Ergebnisse: 10 km Stadtlauf, Platz 14, Verein: [[O|TSV Eimsbüttel]]. Weitere Ergebnisse zu [[P|Lena Fischer]] anzeigen.
+---
+@ search-engine | en
+Cached: Minutes of the parish council. Present: Cllr [[P|J. Whitcombe]] (chair), Cllr [[P|Anita Desai]], Cllr [[P|R. Okafor]]. Apologies: Cllr [[P|Hughes]].
+---
+@ search-engine | en
+How to reset a router - step by step guide with pictures. Unplug the device, wait 30 seconds, then hold the reset button for 10 seconds.
+---
+@ social | en
+Hi I'm [[P|Tasha]]! Mom of 2, nurse at [[O|St. Vincent Medical Center]], [[L|Portland]] born and raised. DM me or text [[T|(503) 555-0191]] for Scentsy orders
+---
+@ social | en
+so proud of my little brother [[P|jamal richardson]] for graduating from [[O|howard university]] today!!! mom and dad flew in from [[L|detroit]]
+---
+@ social | en
+Happy birthday to my amazing wife [[P|Hannah Lindqvist]]! 10 years since we met in [[L|Gothenburg]]. Dinner tonight with [[P|Erik]], [[P|Maja]] and the kids.
+---
+@ social | en
+Selling my bike, pick up near [[S|58 Rosewood Crescent]], [[L|Bristol]]. Message me or email [[E|dan_the_cyclist@hotmail.co.uk]]. Cash only.
+---
+@ social | en
+Monday motivation: the only bad workout is the one that didn't happen. Who's hitting the gym today?
+---
+@ social | de
+Wir sind umgezogen! Neue Adresse: [[S|Lindenweg 12]], [[Z|79100]] [[L|Freiburg]]. Besuch ist immer willkommen. Liebe Grüße, [[P|Miriam]] & [[P|Tobias]]
+---
+@ social | de
+suche mitfahrgelegenheit von [[L|leipzig]] nach [[L|berlin]] am freitag, meldet euch bei mir ([[P|jonas]]) unter [[T|0152 28817386]]
+---
+@ social | de
+Herzlichen Glückwunsch an [[P|Fatima El Amrani]] zur bestandenen Meisterprüfung! Die ganze Belegschaft der [[O|Bäckerei Hinrichs]] ist stolz auf dich.
+---
+@ social | de
+Wer kennt einen guten Kinderarzt in [[L|Bonn]]? Unsere bisherige Ärztin, Frau Dr. [[P|Petersen]], geht leider in Rente.
+---
+@ social | en
+Throwback to [[L|Lisbon]] with @marco.t and @sunny_days. Take me back!
+---
+@ court-record | en
+Case No. 2:19-cv-04417. Plaintiff: [[P|Angela M. Torres]]. Defendant: [[O|Redfield Property Management LLC]]. Attorney for plaintiff: [[P|David Rosenthal]], [[O|Rosenthal & Chu]], [[S|400 Market Street Suite 1200]], [[L|Philadelphia]], [[L|PA]] [[Z|19106]].
+---
+@ court-record | en
+Notice is hereby given that [[P|Gregory Allen Pierce]] of [[S|19 Orchard Hill Road]], [[L|Concord]], [[L|NH]], has filed a petition to change his name to [[P|Gregory Allen Stone]].
+---
+@ court-record | en
+The Board approved a liquor licence for [[O|The Copper Kettle Ltd]], director [[P|Imran Chaudhry]], premises at [[S|23 High Street]], [[L|Luton]] [[Z|LU1 2AA]].
+---
+@ court-record | en
+Deed transfer: grantor Estate of [[P|Walter J. Novak]]; grantee [[P|Michelle Tran]] and [[P|Kevin Tran]]; parcel 14-203-011; consideration $312,000.
+---
+@ court-record | de
+Amtsgericht [[L|Charlottenburg]], HRB 184532 B: [[O|Lumenfeld Software UG (haftungsbeschränkt)]], [[L|Berlin]], [[S|Kantstraße 88]], [[Z|10627]] [[L|Berlin]]. Geschäftsführer: [[P|Nowak, Piotr]], [[L|Potsdam]].
+---
+@ court-record | de
+Insolvenzbekanntmachung: Über das Vermögen des [[P|Heinz Brandl]], [[S|Rosenheimer Landstr. 45]], [[Z|85521]] [[L|Ottobrunn]], wurde das Verfahren eröffnet. Insolvenzverwalter: Rechtsanwalt Dr. [[P|Markus Feldkamp]], [[L|München]].
+---
+@ court-record | de
+Zwangsversteigerung: Einfamilienhaus, [[S|Birkenallee 6]], [[Z|24937]] [[L|Flensburg]]. Eigentümer laut Grundbuch: [[P|Ingrid]] und [[P|Olaf Petersen]].
+---
+@ court-record | de
+Vereinsregister VR 2207: [[O|Kleingartenverein Sonnenschein e.V.]], [[L|Erfurt]]. Vorstand: [[P|Gisela Hartung]] (1. Vorsitzende), [[P|Uwe Lorenz]] (Kassenwart).
+---
+@ court-record | en
+The hearing is adjourned until further notice. Parties will be informed of the new date in writing.
+---
+@ news | en
+Local teacher [[P|Bridget O'Leary]], 41, was honoured on Tuesday for twenty years of service at [[O|Ashgrove Primary School]]. "I never expected this," [[P|O'Leary]] said.
+---
+@ news | en
+Police are appealing for witnesses after a collision on [[S|Wellington Road]] in [[L|Stockport]]. The driver, named locally as [[P|Callum Fraser]], was taken to hospital.
+---
+@ news | en
+[[O|Meridian Foods]] will close its [[L|Sheffield]] plant next year, chief executive [[P|Anthony Bellamy]] confirmed. Union representative [[P|Sunita Patel]] called the decision "a betrayal".
+---
+@ news | en
+Mr [[P|Abdullah Rahman]], who has run the corner shop at [[S|81 Station Road]] for three decades, says rising rents could force him out.
+---
+@ news | en
+The council has approved plans for 120 new homes on the former gasworks site. Construction is expected to begin in the spring.
+---
+@ news | de
+[[L|Kassel]]. Der 34-jährige [[P|Dennis Schröder]] aus [[L|Baunatal]] hat beim Stadtmarathon den ersten Platz belegt. Trainer [[P|Rolf Engelhardt]] zeigte sich begeistert.
+---
+@ news | de
+Bürgermeisterin Dr. [[P|Claudia Reinhardt]] eröffnete am Samstag das neue Feuerwehrhaus. Wehrführer [[P|Karl-Heinz Mertens]] dankte der Gemeinde und der [[O|Sparkasse Oberhessen]] für die Unterstützung.
+---
+@ news | de
+Die [[O|Maschinenfabrik Brinkhaus]] baut 80 Stellen ab. Betriebsratschef [[P|Ahmet Kaya]] kritisierte die Entscheidung der Geschäftsführung um [[P|Friedrich von Stetten]] scharf.
+---
+@ news | de
+Leserbrief von [[P|Waltraud Schneider]], [[L|Bad Homburg]]: Die neue Parkregelung in der Innenstadt ist eine Zumutung für ältere Menschen.
+---
+@ news | de
+Am Wochenende bleibt es überwiegend trocken, die Temperaturen erreichen bis zu 14 Grad. In der Nacht ist mit Bodenfrost zu rechnen.
+---
+@ directory | en
+Dr. [[P|Emily Zhang]], DDS - [[O|Greenfield Family Dental]] - [[S|2150 Elm Street Suite 3]], [[L|Springfield]], [[L|MA]] [[Z|01103]] - [[T|(413) 555-0158]] - Accepting new patients
+---
+@ directory | en
+[[P|Oliver Grant]] MRICS, Chartered Surveyor. [[O|Grant & Mallory Surveyors]], [[S|7 Castle Street]], [[L|Edinburgh]] [[Z|EH2 3AH]]. Tel: [[T|0131 496 0221]]. Email: [[E|oliver@grantmallory.co.uk]]
+---
+@ directory | en
+Faculty: Prof. [[P|Amara Okonkwo]], Department of Chemistry, [[O|University of Leeds]]. Office 3.14. [[E|a.okonkwo@chem.leeds.example]]. Research: catalysis, polymers.
+---
+@ directory | en
+Find a notary: [[P|Lucia Fernández]] - [[L|Miami]], [[L|FL]] - Spanish, English - [[T|305-555-0127]] - mobile service available
+---
+@ directory | de
+Impressum
+[[O|Tischlerei Lindner GmbH]]
+Inhaber: [[P|Matthias Lindner]]
+[[S|Industriestraße 7]]
+[[Z|48153]] [[L|Münster]]
+Telefon: [[T|0251 4710 55]]
+E-Mail: [[E|info@tischlerei-lindner.de]]
+---
+@ directory | de
+Rechtsanwältin [[P|Nadine Schulte-Overbeck]], Fachanwältin für Familienrecht, [[O|Kanzlei Schulte & Kollegen]], [[S|Königsallee 60]], [[Z|40212]] [[L|Düsseldorf]], Tel. [[T|0211 4710 640]], [[E|schulte@kanzlei-sk.de]]
+---
+@ directory | de
+Praxis für Physiotherapie [[P|Ivana Petrović]] · [[S|Schillerplatz 2]] · [[Z|70173]] [[L|Stuttgart]] · Termine unter [[T|0711 4710 908]] oder [[E|termin@physio-petrovic.de]]
+---
+@ directory | de
+Angaben gemäß § 5 TMG: [[O|Nordlicht Media]], [[P|Jan Christiansen]], [[S|Hafenstr. 19]], [[Z|24103]] [[L|Kiel]]. Kontakt: [[T|+49 431 4710 77]], [[E|jan@nordlicht-media.de]]. Bankverbindung: [[I|DE89 3704 0044 0532 0130 00]]
+---
+@ directory | de
+Mitgliederverzeichnis: [[P|Schmidt, Bernd]] - Steuerberater - [[L|Hannover]] | [[P|Schmitz, Yvonne]] - Wirtschaftsprüferin - [[L|Essen]] | [[P|Schneider-Lang, Petra]] - Steuerberaterin - [[L|Kiel]]
+---
+@ directory | en
+Opening hours: Monday to Friday 9am-5pm, Saturday 10am-2pm. Closed on public holidays. Free parking behind the building.
+---
+@ forum | en
+Posted by [[P|Mike Donnelly]]: has anyone dealt with [[O|Brookline Motors]] on [[S|Route 9]]? The salesman, a guy called [[P|Rick]], promised me a refund two weeks ago.
+---
+@ forum | en
+thanks [[P|sarah]]! i'll give dr [[P|patel]] a ring tomorrow. btw my new email is [[E|k.morrison@protonmail.com]] if you want to send the photos
+---
+@ forum | en
+Re: Landlord problems. My landlord ([[P|George Papadopoulos]], owns half the flats on [[S|Clarendon Street]]) still hasn't fixed the boiler. Anyone know who to contact at [[O|Nottingham City Council]]?
+---
+@ forum | en
+I'd recommend [[P|Will]] from [[O|Hope Plumbing]], he fixed our leak in an hour. His number is [[T|020 7946 0455]].
+---
+@ forum | en
+Has anyone tried the new firmware? Mine keeps crashing when I open the settings page. Version 4.2.1 on a Pixel.
+---
+@ forum | de
+Hallo zusammen, ich bin der [[P|Sven]] aus [[L|Rostock]] und neu hier im Forum. Hat jemand Erfahrung mit der Firma [[O|Solartechnik Nord]]? Der Berater, ein Herr [[P|Albrecht]], wirkte etwas unseriös.
+---
+@ forum | de
+@Biene: Danke für den Tipp! Ich habe bei Frau [[P|Kowalczyk]] vom Bürgeramt angerufen ([[T|030 23125 477]]), die war sehr hilfsbereit.
+---
+@ forum | de
+Verkaufe Kinderwagen, abzuholen in [[Z|90402]] [[L|Nürnberg]], [[S|Färberstraße 30]]. Bitte bei Familie [[P|Demir]] klingeln oder anrufen: [[T|0911 4710 26]]
+---
+@ forum | de
+Kann jemand einen Steuerberater empfehlen? Bin selbstständig und komme mit Elster nicht klar.
+---
+@ forum | de
+Zitat von [[P|Thorsten K.]]: "Bei der [[O|Volksbank Mittelhessen]] hat mir Herr [[P|Wagner]] damals sehr geholfen." Kann ich nur bestätigen, Herr [[P|Wagner]] ist top.
+---
+@ blog | en
+About me: I'm [[P|Chloe Anderson]], a freelance illustrator based in [[L|Wellington]], [[L|New Zealand]]. For commissions write to [[E|hello@chloedraws.example]].
+---
+@ blog | en
+Guest post by Dr. [[P|Kwame Mensah]], who teaches economics at the [[O|University of Ghana]]. Last summer I travelled with my colleague [[P|Abena Owusu]] from [[L|Accra]] to [[L|Kumasi]].
+---
+@ blog | en
+My grandmother, [[P|Ruth Goldberg]], arrived in [[L|New York]] in 1949 with one suitcase. She worked for forty years at [[O|Macy's]].
+---
+@ blog | de
+Über uns: Wir, [[P|Carolin]] und [[P|Felix Baumgartner]], betreiben seit 2015 den Hofladen in [[L|Oberammergau]]. Bestellungen gern per Mail an [[E|hofladen@baumgartner-hof.de]] oder telefonisch unter [[T|089 99998 123]].
+---
+@ blog | de
+Gastbeitrag von Prof. Dr. [[P|Henrike Lüders]] ([[O|Universität Greifswald]]): Warum wir mehr über Datenschutz reden müssen.
+---
+@ blog | de
+Rezept der Woche: Kürbissuppe mit Ingwer. Zutaten für vier Personen: ein Hokkaido, zwei Zwiebeln, ein Liter Gemüsebrühe.
+---
+@ people-search | en
+Reverse phone lookup: [[T|212-555-0101]] belongs to [[P|Hyun-woo Park]], [[S|35-12 Union St]], [[L|Flushing]], [[L|NY]] [[Z|11354]]. Carrier: landline.
+---
+@ people-search | de
+Nachbarn von [[P|Giovanni Russo]], [[S|Bahnhofstraße 5]], [[Z|6020]] [[L|Innsbruck]]: [[P|Theresa Hofer]], [[P|Lukas Gruber]]. Telefon [[T|+43 1 5134 0277]].
+---
+@ data-broker | de
+Newsletter-Abonnent: [[E|sandra.maier@gmx.de]], Vorname [[P|Sandra]], Nachname [[P|Maier]], PLZ [[Z|8001]], Ort [[L|Zürich]], Tel [[T|044 668 18 00]]
+---
+@ directory | en
+Staff contact list - Reception: [[P|Naomi Clarke]] ext. 201 - Accounts: [[P|Bartosz Wiśniewski]] ext. 214 - IT support: [[P|Liam O'Brien]] ext. 230 - General enquiries [[E|office@harborpoint.example]]
+---
+@ news | en
+[[P|Yuki Tanaka]] of [[L|Osaka]] and [[P|Fernando Alves]] of [[L|Porto]] shared first prize at the festival, organisers [[O|Cinema Novo]] announced.
+---
+@ social | de
+Danke an Oma [[P|Hilde]] und Opa [[P|Werner]] für das tolle Wochenende in [[L|Garmisch]]! Die Kinder wollen gar nicht mehr nach Hause.
+---
+@ court-record | en
+Marriage licence applications: [[P|Jacob Stein]], [[L|Brooklyn]], and [[P|Rachel Abramov]], [[L|Queens]]; [[P|Luis Ortega]], [[L|Newark]], and [[P|Daniela Cruz]], [[L|Elizabeth]].
+---
+@ forum | en
+My name is [[P|Grace]] and I've been a member since 2019. Before that I lurked for years under my husband [[P|Paul]]'s account. We live just outside [[L|Galway]].

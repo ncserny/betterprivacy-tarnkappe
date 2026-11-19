@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tarnkappe"
+version = "0.3.0"
+description = "Fast, small detection of personal data (PII) in English and German text"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0 (code); CC-BY-SA-4.0 (model weights, see tarnkappe/model/LICENSE)" }
+authors = [{ name = "the betterprivacy-tarnkappe authors" }]
+keywords = ["pii", "privacy", "ner", "redaction", "gdpr"]
+dependencies = ["numpy", "onnxruntime", "phonenumbers"]
+
+[project.optional-dependencies]
+api = ["fastapi", "uvicorn"]
+train = ["torch", "faker", "onnx", "onnxscript", "httpx", "pytest", "fastapi"]
+
+[project.urls]
+Homepage = "https://github.com/ncserny/betterprivacy-tarnkappe"
+
+[tool.setuptools]
+packages = ["tarnkappe"]
+
+[tool.setuptools.package-data]
+tarnkappe = ["model/tagger.int8.onnx", "model/vectors.npz", "model/first_names.txt", "model/thresholds.json", "model/profiles.json",
+             "model/LICENSE", "model/README.md"]

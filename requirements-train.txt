@@ -1,4 +1,8 @@
+# Everything needed to train, benchmark, run the API and the tests: pip install -e ".[train,api]"
 -r requirements.txt
+fastapi
+uvicorn
+faker
 torch
 onnx
 onnxscript
