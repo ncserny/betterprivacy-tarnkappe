@@ -92,6 +92,15 @@ found in social-media text from 64% to 85% (WNUT 2017 test) and in held-out twee
 fell from 55% to 45%, which is still slightly above GLiNER's. TweetNER7, Tweebank-NER and the Temporal Twitter Corpus were not used because their licences
 are not clearly stated; the DFKI SmartData corpus was not used because its labelling rules differ from ours.
 
+## First real pages, and a retraining that did not help
+
+On 27 hand-labelled snippets from one real scan, Tarnkappe found 97% of person mentions and 79% of company mentions;
+GLiNER2-PII found 85% and 89%. The missed companies were almost all brand names without a legal suffix. Adding
+synthetic sentences with such names to training raised company recall by 3 to 7 points but produced many more false
+company flags and made the model label some persons as companies, so the change was dropped. Synthetic brand names
+teach the model that any unfamiliar lower-case or capitalised word can be a company; real labelled pages, or a company
+gazetteer, are the more promising routes. Details in [RESULTS.md](../RESULTS.md).
+
 ## Open questions
 
 - How do the systems compare on real scanned pages, where the hand-checked test set is still missing?

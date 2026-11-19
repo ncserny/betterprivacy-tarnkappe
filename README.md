@@ -134,6 +134,21 @@ the thresholds favour recall over exact boundaries. Details: [RESULTS.md](RESULT
 | 960-token document | 92 ms |
 | Memory, start-up | about 270 MB, 1 s |
 
+## How it is checked by hand
+
+Besides the public benchmarks, the model is tested on texts that a person has labelled. A small labelling page shows
+each text with the model's guesses already marked; the reviewer taps words to correct persons and companies, and the
+corrected labels are scored against the model with `python bench.py --testset <file>`.
+
+| German imprint | Informal German post |
+| --- | --- |
+| ![Labelling page showing a German imprint with company, person, address, phone and email marked](docs/images/labelling-imprint.png) | ![Labelling page showing an informal German post with first names and a café marked](docs/images/labelling-social.png) |
+
+Purple marks are persons, orange marks are companies, dotted green marks are other types the model found (address,
+postcode, phone, email). Both texts shown are invented examples. The same page was used to label 27 snippets from a
+real BetterPrivacy scan; those texts are private and not in this repository, and their results are in [RESULTS.md](RESULTS.md).
+These hand labels are used for testing, not for training.
+
 ## Release bar
 
 `eval/release_bar.json` holds the bar a version must meet on a **hand-checked test set of real pages**

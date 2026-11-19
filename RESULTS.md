@@ -113,6 +113,34 @@ What this shows:
 - Caveats: the corpora annotate only names, so a flagged pronoun counts as wrong even where it refers to a person; the
   WNUT figures here come from 400 texts and differ from the full-set figures above.
 
+## First check on real scanned pages
+
+27 snippets from 14 sites found by one BetterPrivacy scan (the repository owner's own), about half German and half English:
+imprint, company-register pages, trade press, blogs, a slide transcript, a code-hosting thread. The owner corrected the
+model's pre-labels for persons and companies by hand. The texts are private and not in this repository.
+
+| | Tarnkappe | GLiNER2-PII |
+| --- | --- | --- |
+| Persons found (60 mentions) | 96.7% | 85.0% |
+| Person detections that are correct | 85.1% | 75.8% |
+| Companies found (101 mentions) | 79.2% | 89.1% |
+| Company detections that are correct | 80.9% | 65.7% |
+
+Read with care:
+
+- One person's scan. A large share of the person mentions are the same two names, and a few company names account for
+  many of the company mentions.
+- The labels started from Tarnkappe's own guesses, so anything left unchanged counts for Tarnkappe and against GLiNER2-PII.
+  A handful of leftover marks look like oversights.
+- Almost all missed companies are brand names without a legal suffix, often in lower case.
+
+**Tried and not kept:** retraining with about 60 extra sentence patterns for suffix-less, lower-case and listed brand
+names (invented names only). On these pages companies found rose from 79% to 82-86% depending on the threshold, but
+company detections that are correct fell from 81% to 64-75%, more persons were labelled as companies (persons labelled
+as persons fell from 95% to 88%), and persons found on tweets fell by about 5 points. The model in this repository is
+therefore unchanged. Since these pages have now been used to judge a change, they count as development data; a
+held-out set from other people's scans is still needed.
+
 ## Transformer reference
 
 spaCy `en_core_web_trf` (RoBERTa-base, 125M parameters, trained on OntoNotes, not on these corpora), same machine:
