@@ -155,6 +155,40 @@ as persons fell from 95% to 88%), and persons found on tweets fell by about 5 po
 therefore unchanged. Since these pages have now been used to judge a change, they count as development data; a
 held-out set from other people's scans is still needed.
 
+**Label review (19 November 2026):** the owner ruled on doubtful marks in seven of the 27 snippets (a project handle and
+a job title are not persons; "Agentur" and similar descriptions are not companies). With the corrected labels the model
+finds 96.4% of persons (54 of 56) and 79.6% of companies (98 mentions), or 83.7% with names shared across the scan.
+
+## Held-out check: four other people's scans
+
+38 snippets from the BetterPrivacy scans of four other people, who agreed to be scanned for this test: personal sites,
+imprints, a company-register page, trade press, blogs, a people-search page; 23 German, 15 English. The model's answers
+were saved before the owner labelled persons and companies, so the labels could not influence them. The texts are private.
+
+| | Persons found | Person detections correct | Companies found | Company detections correct | ms per text |
+| --- | --- | --- | --- | --- | --- |
+| Tarnkappe | 93.4% | 71.8% | 67.1% | 63.8% | 5 |
+| Tarnkappe, names shared across each scan | 93.4% | 72.7% | 69.6% | 65.6% | 5 |
+| Tarnkappe, plus the scanned person's name | 100% | 74.7% | 69.6% | 66.7% | 5 |
+| GLiNER multi PII v1 (threshold 0.5) | 90.2% | 98.2% | 75.9% | 70.4% | 285 |
+| GLiNER2-PII (threshold 0.5) | 100% | 88.1% | 96.2% | 58.6% | 256 |
+
+61 person mentions and 79 company mentions, so one miss moves a figure by 1.3 to 1.6 points.
+
+Read with care:
+
+- All four missed persons were the scanned person: the name on the first line of a profile page, the surname alone in a
+  headline and in running text, and the surname inside a domain name. `profile_names` (see the README) was added after
+  seeing these misses, so its 100% is not a clean test result.
+- The labels started from Tarnkappe's own guesses. A first pass left several of its mistakes in place and put companies
+  found at 80%; after the owner ruled on those cases (web sites, blogs and shops count as companies; handles and names
+  inside e-mail addresses are not persons) it is 67%. The same bias may remain in smaller ways.
+- Missed companies are almost all brand and site names without a legal suffix: blog.de, Showroom.fm, GitHub, LinkedIn,
+  WordPress, Spreeblick.
+- Wrong person detections are mostly menu words and company names. The tagger does not see line breaks, so a column of
+  menu entries reads like a row of capitalised words.
+- These snippets have now been used to find errors, so they count as development data from here on.
+
 ## Transformer reference
 
 spaCy `en_core_web_trf` (RoBERTa-base, 125M parameters, trained on OntoNotes, not on these corpora), same machine:

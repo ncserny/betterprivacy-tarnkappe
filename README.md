@@ -95,21 +95,26 @@ curl -s localhost:8000/v1/detect -H 'content-type: application/json' \
 Interactive API docs are served at `/docs`. The service has no authentication or rate limiting;
 add both before exposing it to the internet.
 
-## Sharing company names across one scan
+## Sharing names across one scan
 
 One person's scan covers many pages that mention the same few companies. `detect_scan` runs the detector on all
 pages, collects every company found with a legal suffix ("appstretto UG"), and then matches the bare name
 ("appstretto") on every page. Known names, such as the employers in the person's profile, can be passed in as well.
 
+The scanned person's own name is known before any page is read. Pass it as `profile_names` and it is found
+everywhere: alone in a headline, in capitals, or inside a domain name. It is not matched right after an "@".
+
 ```python
 from tarnkappe import Detector, detect_scan
 
-results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"])   # one entity list per page
+results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"],
+                      profile_names=["Jana Beispiel"])                            # one entity list per page
 Detector().detect(text, known_companies=["compuccino"])                           # or for a single text
 ```
 
-No external company database is involved. On the hand-labelled real pages this raised companies found from 79% to 84%
-(87% with three profile names) with no loss for persons; see [RESULTS.md](RESULTS.md).
+No external database is involved. On the owner's hand-labelled pages, sharing company names raised companies found
+from 80% to 84% with no loss for persons. On four other people's scans the model missed four mentions of a scanned
+person; with `profile_names` it missed none. See [RESULTS.md](RESULTS.md).
 
 ## How it works
 
@@ -162,8 +167,9 @@ corrected labels are scored against the model with `python bench.py --testset <f
 | ![Labelling page showing a German imprint with company, person, address, phone and email marked](docs/images/labelling-imprint.png) | ![Labelling page showing an informal German post with first names and a café marked](docs/images/labelling-social.png) |
 
 Purple marks are persons, orange marks are companies, dotted green marks are other types the model found (address,
-postcode, phone, email). Both texts shown are invented examples. The same page was used to label 27 snippets from a
-real BetterPrivacy scan; those texts are private and not in this repository, and their results are in [RESULTS.md](RESULTS.md).
+postcode, phone, email). Both texts shown are invented examples. The same page was used to label 65 snippets from
+five real BetterPrivacy scans (the owner's and four other people's, with their consent); those texts are private and not
+in this repository, and their results are in [RESULTS.md](RESULTS.md).
 These hand labels are used for testing, not for training.
 
 ## Release bar
@@ -172,9 +178,12 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status: **not met.** There is no real-page test set yet, persons in informal text are at 85 to 88% against a bar of 95%, and phone
-and postcode results are only measured on sets the rules were developed against. See [eval/README.md](eval/README.md)
-for how to build the test set and score against the bar (`python bench.py --testset <file> --gate`).
+Status: **not met.** On 38 snippets from four other people's scans (hand-labelled for persons and companies), the model
+finds 93% of persons (100% of the scanned person's own mentions once the name is passed in, bar 95%) and 67 to 70% of
+companies (bar 80%); about 72% of its person detections and 65% of its company detections are correct (bar 85%).
+Phones, postcodes and addresses are not hand-labelled on real pages yet. Details and a comparison with GLiNER are in
+[RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
+(`python bench.py --testset <file> --gate`).
 
 ## Long pages
 
@@ -210,7 +219,7 @@ python -m pytest tests
 | Path | What |
 | --- | --- |
 | `tarnkappe/detect.py` | Runtime: patterns, ONNX model, name splitting, redaction |
-| `tarnkappe/scan.py` | Scan-level company matching: share company names between the pages of one scan |
+| `tarnkappe/scan.py` | Scan-level matching: share company names between the pages of one scan, and find the scanned person's own name |
 | `tarnkappe/features.py` | Tokeniser, features, word vectors, tag conversion (numpy only) |
 | `tarnkappe/data.py` | Synthetic data generator; train and test names and templates are kept disjoint |
 | `tarnkappe/corpora.py` | Loaders for the public corpora |

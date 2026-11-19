@@ -1,4 +1,4 @@
-"""Scan-level company matching.
+"""Scan-level matching of company names and of the scanned person's own name.
 
 One person's scan covers many pages that mention the same few companies. A company that is
 found once with a legal suffix ("appstretto UG") can then be matched by its bare name
@@ -8,7 +8,12 @@ because every name comes from that person's own results.
 
     from tarnkappe import Detector
     from tarnkappe.scan import detect_scan
-    results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"])
+    results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"],
+                          profile_names=["Jana Beispiel"])
+
+The scanned person's own name is known before any page is read. Passing it as profile_names
+makes sure it is found everywhere: alone in a headline ("Beispiel verstärkt ..."), in capitals,
+or inside a domain name ("beispiel.berlin").
 """
 import re
 
@@ -72,9 +77,56 @@ def company_spans(text, names):
             for a, b in sorted(spans)]
 
 
-def apply_known(text, entities, names):
+def person_spans(text, names, split_names=True):
+    """Occurrences of a known person's name: the full name, and each part on its own. Parts of
+    five or more letters also match in lower case (domain names); shorter parts must be
+    capitalised or in capitals. Not matched right after "@" (handles are not persons)."""
+    spans = []
+    def scan(pattern, flags, kind):
+        for m in re.finditer(r"(?<![\w@])" + pattern + r"(?![\w])", text, flags):
+            if all(m.end() <= a or m.start() >= b for a, b, _ in spans):
+                spans.append((m.start(), m.end(), kind))
+    people = [[p for p in re.split(r"\s+", n.strip()) if p] for n in names]
+    for parts in people:                                   # full names first, so they win over single parts
+        if len(parts) >= 2:
+            scan(r"\s+".join(re.escape(p) for p in parts), re.IGNORECASE, "full")
+    for parts in people:
+        for i, p in enumerate(parts):
+            if len(p) < 3 or not p[0].isalpha():
+                continue
+            kind = "LAST_NAME" if i == len(parts) - 1 and len(parts) > 1 else "FIRST_NAME"
+            scan("(?:" + re.escape(p[0].upper() + p[1:]) + "|" + re.escape(p.upper()) +
+                 ("|" + re.escape(p.lower()) if len(p) >= 5 else "") + ")", 0, kind)
+    out = []
+    mk = lambda typ, a, b: {"type": typ, "start": a, "end": b, "score": 1.0, "source": "list", "text": text[a:b]}
+    for a, b, kind in sorted(spans):
+        if not split_names:
+            out.append(mk("PERSON", a, b))
+        elif kind == "full":
+            cut = a + text[a:b].rindex(re.split(r"\s+", text[a:b])[-1])
+            out += [mk("FIRST_NAME", a, a + len(text[a:cut].rstrip())), mk("LAST_NAME", cut, b)]
+        else:
+            out.append(mk(kind, a, b))
+    return out
+
+
+PERSON_TYPES = {"PERSON", "FIRST_NAME", "LAST_NAME"}
+
+
+def apply_known(text, entities, names, person_names=(), split_names=True):
     """Add list matches to one page's detections. A list match replaces model detections it
     overlaps, except e-mail addresses, IBANs and other pattern hits."""
+    if person_names:
+        people = person_spans(text, person_names, split_names)
+        keep = []
+        for e in entities:
+            clash = [x for x in people if x["start"] < e["end"] and x["end"] > e["start"]]
+            if not clash:
+                keep.append(e)
+            elif e["source"] != "model" or e["type"] in PERSON_TYPES:
+                people = [x for x in people if x not in clash]      # pattern hits and the model's own person spans win
+                keep.append(e)
+        entities = sorted(keep + people, key=lambda e: e["start"])
     extra = company_spans(text, names)
     keep = []
     for e in entities:
@@ -90,11 +142,13 @@ def apply_known(text, entities, names):
     return sorted(keep + extra, key=lambda e: e["start"])
 
 
-def detect_scan(detector, texts, profile_companies=(), **kwargs):
+def detect_scan(detector, texts, profile_companies=(), profile_names=(), **kwargs):
     """Detect PII on all pages of one scan, sharing company names between pages.
+    profile_names: the scanned person's own name(s), matched on every page.
     Returns one entity list per text, in order."""
     first = [detector.detect(t, **kwargs) for t in texts]
     names = set(profile_companies)
     for t, ents in zip(texts, first):
         names |= harvest(t, ents)
-    return [apply_known(t, ents, names) for t, ents in zip(texts, first)]
+    split = kwargs.get("split_names", True)
+    return [apply_known(t, ents, names, profile_names, split) for t, ents in zip(texts, first)]

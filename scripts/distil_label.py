@@ -7,7 +7,10 @@ Input: one text snippet per line. Output: JSONL {"text": ..., "spans": [[start, 
 Teachers:
     spacy:<model>   any installed spaCy pipeline
     gliner          urchade/gliner_multi_pii-v1
-    gliner2         fastino/gliner2-privacy-filter-PII-multi
+    gliner2         fastino/gliner2-privacy-filter-PII-multi, with its own label names (full_name, city, ...)
+    gliner2-plain   the same model asked for plain labels (person, organization, location, ...). On real scanned
+                    pages this found 96% of companies. Each span is written with its confidence
+                    ([start, end, LABEL, score]) so that a cut-off can be chosen later (scripts/build_distilled.py).
 
 Caution: both GLiNER models over-flag persons in free text (pronouns, "owner", "children"; see
 RESULTS.md). Keep a high --threshold for person labels or use them for address-type labels only.
@@ -42,6 +45,15 @@ def teacher(name, threshold):
             res = m.extract_entities(t, list(GL2), threshold=threshold, include_spans=True)
             return [[v["start"], v["end"], GL2[lab]] for lab, vals in res.get("entities", {}).items() for v in vals]
         return run
+    if name == "gliner2-plain":
+        from gliner2 import GLiNER2
+        m = GLiNER2.from_pretrained("fastino/gliner2-privacy-filter-PII-multi")
+
+        def run(t):
+            res = m.extract_entities(t, list(GL), threshold=threshold, include_confidence=True, include_spans=True)
+            return [[v["start"], v["end"], GL[lab], round(float(v["confidence"]), 3)]
+                    for lab, vals in res.get("entities", {}).items() for v in vals]
+        return run
     raise SystemExit(f"unknown teacher {name}")
 
 
@@ -59,10 +71,15 @@ if __name__ == "__main__":
             if not text:
                 continue
             spans = sorted(label(text))
-            keep, end = [], -1                     # drop overlapping spans, first one wins
-            for s in spans:
-                if s[0] >= end:
-                    keep.append(s); end = s[1]
+            if a.teacher == "gliner2-plain":       # keep everything, overlaps are resolved when the cut-off is applied
+                keep = spans
+            else:
+                keep, end = [], -1                 # drop overlapping spans, first one wins
+                for s in spans:
+                    if s[0] >= end:
+                        keep.append(s); end = s[1]
             out.write(json.dumps({"text": text, "spans": keep}, ensure_ascii=False) + "\n")
             n += 1
+            if n % 200 == 0:
+                out.flush(); print(n, flush=True)
     print(f"labelled {n} snippets with {a.teacher}")

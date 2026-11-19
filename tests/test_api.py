@@ -86,3 +86,18 @@ def test_scan_shares_company_names_between_pages():
     assert ("EMAIL", "kontakt@flowmint.de") in second                   # pattern hits are not overwritten
     alone = [(e["type"], e["text"]) for e in Detector().detect("ask pixelnest about it", known_companies=["Pixelnest"])]
     assert ("ORGANIZATION", "pixelnest") in alone
+
+
+def test_scan_finds_the_scanned_persons_name():
+    from tarnkappe.detect import Detector
+    from tarnkappe.scan import detect_scan, person_spans
+    page = "Beispielova verstärkt Nordwind\nmehr auf beispielova.berlin, @beispielova oder jana@beispielova.berlin"
+    res = detect_scan(Detector(), [page], profile_names=["Jana Beispielova"])[0]
+    names = [(e["text"], e["start"]) for e in res if e["type"] in ("FIRST_NAME", "LAST_NAME")]
+    assert ("Beispielova", 0) in names                                   # surname alone in a headline
+    assert ("beispielova", page.index("beispielova.berlin")) in names    # inside a domain name
+    listed = [e["start"] for e in person_spans(page, ["Jana Beispielova"])]
+    assert all(a == 0 or page[a - 1] != "@" for a in listed)             # the list never matches a handle or e-mail
+    assert any(e["type"] == "EMAIL" and e["text"] == "jana@beispielova.berlin" for e in res)
+    assert [e["type"] for e in person_spans("JANA BEISPIELOVA", ["Jana Beispielova"])] == ["FIRST_NAME", "LAST_NAME"]
+    assert [e["type"] for e in person_spans("Jana Beispielova", ["Jana Beispielova"], split_names=False)] == ["PERSON"]
