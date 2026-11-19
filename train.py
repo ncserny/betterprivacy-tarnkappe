@@ -149,10 +149,13 @@ def main():
     t0 = time.time()
     vectors = Vectors(os.path.join(a.out, "vectors.npz"))
     tables = [torch.from_numpy(t) for t in vectors.tables]
-    real = corpora.ewt("train") + corpora.germeval("train") + corpora.wnut("train") + corpora.btc("train")
+    informal = corpora.wnut("train") + corpora.btc("train")
+    real = corpora.ewt("train") + corpora.germeval("train") + informal
     real = casing_noise(corpora.join_neighbours(real, rng), rng)
+    if a.extra:      # teacher-labelled text is formal; show the informal text twice so it keeps its weight
+        real += casing_noise(corpora.join_neighbours(informal, rng), rng)
     for path in a.extra:
-        extra = corpora.jsonl(path)
+        extra = casing_noise(corpora.jsonl(path), rng)
         print(f"extra: {len(extra)} examples from {path}")
         real += extra
     train = encode(real + data.make("train", a.synthetic) + data.make_presidio(a.presidio), vectors)

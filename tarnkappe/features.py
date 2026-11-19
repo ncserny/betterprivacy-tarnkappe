@@ -8,7 +8,10 @@ import zlib
 
 import numpy as np
 
-TOKEN_RE = re.compile(r"\w+|[^\w\s]", re.UNICODE)
+# A run of line breaks is one token: on web pages a line break separates menu entries, list rows and
+# headings, and without it a column of menu words reads like a row of capitalised names.
+TOKEN_RE = re.compile(r"\w+|[^\w\s]|\n+", re.UNICODE)
+NEWLINE = "\n"
 WORD_BUCKETS = 30000      # hashed word vocabulary (id 0 = padding / unknown)
 CHAR_VOCAB = 320          # 0 pad, 1..255 latin-1, 256..319 hashed other chars
 MAX_CHARS = 20
@@ -61,6 +64,8 @@ def featurize(tokens):
     words = np.zeros(n, dtype=np.int64)
     chars = np.zeros((n, MAX_CHARS), dtype=np.int64)
     for i, tok in enumerate(tokens):
+        if tok[0] == NEWLINE:
+            tok = NEWLINE
         words[i] = zlib.crc32(tok.lower().encode("utf-8")) % (WORD_BUCKETS - 1) + 1
         for j, c in enumerate(tok[:MAX_CHARS]):
             chars[i, j] = _char_id(c)
@@ -68,13 +73,15 @@ def featurize(tokens):
 
 
 def spans_to_tags(tokens, spans):
-    """Character spans -> BIO tag ids aligned to tokens."""
+    """Character spans -> BIO tag ids aligned to tokens. Line-break tokens are never part of an
+    entity. A span labelled "?" marks text whose label is unknown: its tokens get -100 and are
+    left out of the training loss (used for uncertain teacher labels)."""
     tags = np.zeros(len(tokens), dtype=np.int64)
     for a, b, lab in spans:
         first = True
-        for i, (_, s, e) in enumerate(tokens):
-            if s >= a and e <= b:
-                tags[i] = TAG2ID[("B-" if first else "I-") + lab]
+        for i, (t, s, e) in enumerate(tokens):
+            if s >= a and e <= b and t[0] != NEWLINE:
+                tags[i] = -100 if lab == "?" else TAG2ID[("B-" if first else "I-") + lab]
                 first = False
     return tags
 

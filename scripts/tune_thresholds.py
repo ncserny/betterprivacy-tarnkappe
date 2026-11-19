@@ -1,6 +1,7 @@
 """Tune one decision threshold per entity type, favouring recall (F2), on development data only.
 
-    python scripts/tune_thresholds.py          # writes tarnkappe/model/thresholds.json
+    python scripts/tune_thresholds.py                  # writes tarnkappe/model/thresholds.json
+    python scripts/tune_thresholds.py /tmp/model_dir   # tune a model in another folder
 
 Dev data: UNER EWT dev, GermEval dev, WNUT 2017 dev, Broad Twitter Corpus dev (person / organisation / location) and
 generated text with unseen names and phrasing (all types). Test sets are not touched.
@@ -21,7 +22,8 @@ GRID = [round(x, 2) for x in np.arange(0.05, 0.61, 0.05)]
 
 
 def main():
-    det = Detector()
+    model_dir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "tarnkappe", "model")
+    det = Detector(model_dir)
     real = corpora.ewt("dev") + corpora.germeval("dev") + corpora.wnut("dev") + corpora.btc("dev")
     synth = data.make("test", 2500, seed=5)
     cache = []
@@ -53,7 +55,7 @@ def main():
         result[typ] = best[1]
         table.append((typ, base, best))
         print(f"{typ:9s} at 0.50: P {base[0]:.3f} R {base[1]:.3f}   ->  at {best[1]:.2f}: P {best[2]:.3f} R {best[3]:.3f}")
-    out = os.path.join(os.path.dirname(__file__), "..", "tarnkappe", "model", "thresholds.json")
+    out = os.path.join(model_dir, "thresholds.json")
     json.dump(result, open(out, "w"), indent=2)
     print("wrote", os.path.normpath(out))
 

@@ -112,9 +112,12 @@ results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"],
 Detector().detect(text, known_companies=["compuccino"])                           # or for a single text
 ```
 
-No external database is involved. On the owner's hand-labelled pages, sharing company names raised companies found
-from 80% to 84% with no loss for persons. On four other people's scans the model missed four mentions of a scanned
-person; with `profile_names` it missed none. See [RESULTS.md](RESULTS.md).
+Company names the tagger is very sure about on one page are shared across the scan in the same way. `detect_scan`
+passes other arguments on to `detect`, so `detect_scan(det, pages, profile="pages", profile_names=[...])` is the
+recommended call for a scan.
+
+No external database is involved. On the four other people's scans, sharing names raised companies found from 75% to
+82%, and `profile_names` raised persons found from 95% to 100%. See [RESULTS.md](RESULTS.md).
 
 ## How it works
 
@@ -123,8 +126,10 @@ person; with `profile_names` it missed none. See [RESULTS.md](RESULTS.md).
 2. **A 2.5M-parameter neural tagger** reads the text once and labels each word. It combines pretrained word
    vectors, hashed word embeddings and a character CNN, followed by a two-layer BiGRU. It is exported to ONNX and quantised to int8.
 3. **A rule** splits each detected person into first and last name, using titles ("Herr", "Dr."), name particles ("van der") and a first-name list.
+4. **A rule** marks "<Name> GmbH", "<Name> UG", "<Name> Ltd" and other legal forms as a company.
 
-Pattern hits win over model hits where they overlap. Background and design choices are in [docs/RESEARCH.md](docs/RESEARCH.md).
+The tagger reads line breaks, so menu entries, list rows and headings stay separate, and no detection runs across a line.
+Pattern and rule hits win over model hits where they overlap. Background and design choices are in [docs/RESEARCH.md](docs/RESEARCH.md).
 
 ## Accuracy and speed
 
@@ -134,20 +139,41 @@ Measured with `python bench.py --spacy` on 2 CPU cores, one thread, shipped int8
 
 | Test | Found | Clean test? |
 | --- | --- | --- |
-| Persons in English web text (UNER EWT test) | 95.5% | yes |
-| Persons in German Wikipedia/news (GermEval 2014 test) | 96.3% | yes |
-| Persons in tweets (Broad Twitter Corpus test) | 88.2% | yes |
-| Persons in social-media text (WNUT 2017 test) | 85.1% | yes |
-| All PII in Microsoft Presidio sentences, templates unseen in training | 95.2% (92.7% of detections are real) | not for phones and postcodes |
-| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 96.8% (92.3% of detections are real) | not for phones and postcodes |
+| Persons in English web text (UNER EWT test) | 95.8% | yes |
+| Persons in German Wikipedia/news (GermEval 2014 test) | 95.8% | yes |
+| Persons in tweets (Broad Twitter Corpus test) | 79.8% | yes |
+| Persons in social-media text (WNUT 2017 test) | 79.7% | yes |
+| All PII in Microsoft Presidio sentences, templates unseen in training | 96.1% (93.6% of detections are real) | not for phones and postcodes |
+| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 98.1% (91.1% of detections are real) | not for phones and postcodes |
 
-On the Presidio set: email, IBAN and IP 100%, person 99%, credit card 97%, city/country 96%, street address 94%,
-organisation 91%, phone 75%, postcode 70%.
+On the Presidio set: email, IBAN and IP 100%, person 100%, street address 98%, credit card 97%, organisation 96%,
+city/country 94%, phone 75%, postcode 44% (mostly multi-line addresses from countries the postcode rules do not cover).
 
-Next to GLiNER2-PII on the same texts, Tarnkappe finds about as many persons in edited English and German text
-(97 to 99% against 97 to 98%) with about twice the precision, and fewer in social-media text (85% against 96%),
-at under 2 ms per text against about 200 ms. Strict F1 for persons is 0.73 to 0.75 on edited text and 0.50 on WNUT;
-the thresholds favour recall over exact boundaries. Details: [RESULTS.md](RESULTS.md).
+**On real scanned web pages** (65 hand-labelled snippets from five BetterPrivacy scans, `pages` profile, each scan
+processed with `detect_scan` and the scanned person's name):
+
+| | Persons found | Person detections correct | Companies found | Company detections correct |
+| --- | --- | --- | --- | --- |
+| Four other people's scans (38 snippets) | 100% | 86.3% | 82.3% | 86.2% |
+| Owner's scan (27 snippets) | 96.4% | 91.7% | 83.7% | 77.8% |
+
+These snippets were also used to choose the thresholds and rules, so the figures are development results, not a clean
+test. On the 38 snippets GLiNER2-PII finds 100% of persons and 96% of companies, with 88% and 59% of its detections
+correct, at about 250 ms per snippet against 6 ms.
+
+The model was retrained for web pages, and that cost accuracy on tweets (persons found fell from 88% to 80%). Strict F1
+for persons is 0.75 to 0.77 on edited text and 0.53 on WNUT; the default thresholds favour recall over exact boundaries.
+Details: [RESULTS.md](RESULTS.md).
+
+### Two threshold sets
+
+```python
+det.detect(text)                     # default: find as much as possible, also in tweets and chat
+det.detect(text, profile="pages")    # web pages: far fewer menu words and product names flagged
+```
+
+Use `profile="pages"` for scanned web pages, together with `detect_scan`. Keep the default for chat and social-media
+text: with the `pages` profile only about 55 to 62% of persons in tweets are found.
 
 | Speed and size | |
 | --- | --- |
@@ -178,12 +204,13 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status: **not met.** On 38 snippets from four other people's scans (hand-labelled for persons and companies), the model
-finds 93% of persons (100% of the scanned person's own mentions once the name is passed in, bar 95%) and 67 to 70% of
-companies (bar 80%); about 72% of its person detections and 65% of its company detections are correct (bar 85%).
-Phones, postcodes and addresses are not hand-labelled on real pages yet. Details and a comparison with GLiNER are in
-[RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
-(`python bench.py --testset <file> --gate`).
+Status: **close on development data, not yet shown on clean data.** On 38 hand-labelled snippets from four other
+people's scans (`pages` profile, `detect_scan`, scanned person's name): persons found 100% (bar 95%), companies found
+82% (bar 80%), 86% of person and company detections correct (bar 85%). On the owner's 27 snippets companies found is
+84% but only 78% of company detections are correct. Both sets were used to tune thresholds and rules, so a scan the
+model has never been tuned on is still needed, and phones, postcodes and addresses are not hand-labelled on real pages
+yet. Details and a comparison with GLiNER are in [RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for
+how to score against the bar (`python bench.py --testset <file> --gate`).
 
 ## Long pages
 
@@ -205,10 +232,22 @@ grows in proportion to length. The HTTP API accepts up to 100,000 characters per
 git clone https://github.com/ncserny/betterprivacy-tarnkappe && cd betterprivacy-tarnkappe
 pip install -e ".[train,api]"
 bash scripts/fetch_data.sh        # downloads the public corpora into data/
-python train.py                   # about 35 minutes on 2 CPU cores; writes tarnkappe/model/
+python train.py                   # public corpora only: about 35 minutes on 2 CPU cores; writes tarnkappe/model/
 python scripts/tune_thresholds.py # re-tune per-type thresholds on dev data; writes tarnkappe/model/thresholds.json
 python bench.py                   # samples, accuracy, PII recall, release bar, latency
 python -m pytest tests
+```
+
+The shipped model was trained with teacher-labelled Wikipedia text on top (about three hours on 2 CPU cores in all):
+
+```bash
+pip install gliner2 pyarrow huggingface_hub
+# one German and one English file of https://huggingface.co/datasets/wikimedia/wikipedia (config 20231101.de / .en)
+python scripts/wiki_snippets.py <de.parquet> data/wiki_de.txt && python scripts/wiki_snippets.py <en.parquet> data/wiki_en.txt
+cat data/wiki_de.txt data/wiki_en.txt > data/wiki_snippets.txt
+python scripts/distil_label.py data/wiki_snippets.txt data/wiki_gliner2.jsonl --teacher gliner2-plain --threshold 0.3
+python scripts/build_distilled.py data/wiki_gliner2.jsonl data/distilled_pages.jsonl
+python train.py --extra data/distilled_pages.jsonl
 ```
 
 `python bench.py --spacy` adds the spaCy baselines (needs `spacy` and its `sm`/`md` models for English and German).
@@ -239,6 +278,6 @@ python -m pytest tests
 
 - **Code** (everything outside `tarnkappe/model/`): [Apache License 2.0](LICENSE).
 - **Model weights** (`tarnkappe/model/tagger.onnx`, `tarnkappe/model/tagger.int8.onnx`): [CC BY-SA 4.0](tarnkappe/model/LICENSE),
-  because part of the training data (UNER English EWT) is CC BY-SA 4.0. Commercial use is allowed;
+  because part of the training data (UNER English EWT and Wikipedia text) is CC BY-SA 4.0. Commercial use is allowed;
   if you publish modified weights they must carry the same licence and the credits.
 - Training-data credits and the licences of the other files in `tarnkappe/model/`: [NOTICE](NOTICE) and the [model card](tarnkappe/model/README.md).

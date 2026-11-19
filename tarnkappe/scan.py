@@ -17,14 +17,46 @@ or inside a domain name ("beispiel.berlin").
 """
 import re
 
-LEGAL = (r"(?:GmbH\s*&\s*Co\.?\s*KGaA|GmbH\s*&\s*Co\.?\s*KG|gGmbH|GmbH|UG\s*\(haftungsbeschränkt\)|UG|AG|KGaA|KG|OHG|SE|"
-         r"e\.\s?V\.|eG|GbR|Inc\.?|LLC|Ltd\.?|Limited|LLP|PLC|plc|Corp\.?|Corporation|S\.A\.|SAS|SARL|B\.V\.|BV|N\.V\.|S\.r\.l\.|AB|Oy|ApS|A/S)")
+LEGAL = (r"(?:GmbH\s*&\s*Co\.?\s*KGaA|GmbH\s*&\s*Co\.?\s*KG|gGmbH|GmbH|GMBH|mbH|gUG|UG\s*\(haftungsbeschränkt\)|UG|AG|KGaA|KG|OHG|SE|"
+         r"e\.\s?V\.|e\.\s?K\.|eG|GbR|Inc\.?|INC\.?|LLC|Ltd\.?|LTD\.?|Limited|LIMITED|LLP|PLC|plc|Corp\.?|Corporation|S\.A\.|S\.p\.A\.|SAS|SARL|"
+         r"B\.V\.|BV|N\.V\.|S\.r\.l\.|AB|Oy|ApS|A/S)")
+# "Nordwind Logistik GmbH", "compuccino GmbH", "INNSIDES INTERIORS UG": up to five name words on one line, then a legal form
+_W = r"[\w&+'’-]*(?:\.[\w&+'’-]+)*"                      # dots only inside a word ("blog.de"), never at its end
+_NOT_FORM = r"(?!" + LEGAL + r"(?![\w-]))"                  # a name word is never itself a legal form
+_CAP = _NOT_FORM + r"[A-ZÄÖÜ0-9]" + _W
+_LOW = _NOT_FORM + r"[a-zäöü]" + _W
+COMPANY = re.compile(r"(?<![\w@.-])((?:" + _CAP + r"[ \t]+(?:&[ \t]+)?){0,4}(?:" + _LOW + r"[ \t]+)?(?:" + _CAP + "|" + _LOW +
+                     r"))[ \t]*,?[ \t]+" + LEGAL + r"(?![\w-])")
+RISKY = {"AB", "SE", "SAS", "Oy", "BV", "NV", "AG"}             # short forms that are also ordinary words or model names
+LEADING = {"die", "der", "das", "den", "dem", "des", "the", "bei", "von", "vom", "für", "mit", "im", "in", "an", "am", "und", "and", "at",
+           "by", "for", "with", "als", "zur", "zum", "a", "an", "of", "from", "seit", "since", "auch", "laut", "ein", "eine"}
 SUFFIX = re.compile(r"[\s,]+" + LEGAL + r"(?:\s*\(haftungsbeschränkt\))?\s*$")
 ACRONYM = re.compile(r"^\s*\(([A-ZÄÖÜ]{2,6})\)")
 # words that are not a company name on their own
 GENERIC = {"agentur", "kommunikation", "gruppe", "group", "holding", "consulting", "solutions", "systems", "services",
            "media", "digital", "software", "technologies", "partners", "ventures", "management", "company", "firma",
            "the", "die", "der", "das", "und", "and", "deutsche", "international", "berlin", "hamburg", "münchen", "köln"}
+
+
+def legal_form_spans(text):
+    """Companies written with their legal form. This is a rule, not a guess: "<Name> GmbH" is a company."""
+    out = []
+    for m in COMPANY.finditer(text):
+        a = m.start()
+        words = m.group(1).split()
+        while len(words) > 1 and words[0].lower() in LEADING:      # "Die Nordwind GmbH" -> "Nordwind GmbH"
+            a = text.index(words[1], a + len(words[0]))
+            words.pop(0)
+        if words[0].lower() in LEADING or words[-1].lower() in LEADING or len(" ".join(words)) < 3:
+            continue                                               # "der gUG", "Betrieb der gUG": no name before the form
+        form = text[m.end(1):m.end()].strip(" \t,")
+        if form in RISKY and (any(w[0].islower() for w in words) or words[-1].isdigit()):
+            continue                                               # "He is in AB", "iPhone SE", "Fiat 500 SE"
+        out.append({"type": "ORGANIZATION", "start": a, "end": m.end(), "score": 1.0, "source": "rule", "text": text[a:m.end()]})
+    return out
+
+
+SURE = 0.9
 
 
 def bare_name(company):
@@ -45,6 +77,11 @@ def harvest(text, entities):
     for e in entities:
         if e["type"] != "ORGANIZATION":
             continue
+        name = e["text"].strip()
+        if (e.get("source") == "model" and e.get("score", 0) >= SURE and "\n" not in name and 4 <= len(name) <= 40
+                and len(name.split()) <= 4 and (name[0].isupper() or "." in name)
+                and not all(w.lower() in GENERIC for w in name.split())):
+            out.add(name)                               # a name the tagger is very sure about on this page
         for line in e["text"].split("\n"):              # a detection can run over several list lines
             name = bare_name(line)
             if not name:

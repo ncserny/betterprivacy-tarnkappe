@@ -7,7 +7,7 @@ Texts are processed in memory and never logged or stored.
 import time
 from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .detect import Detector
@@ -20,12 +20,14 @@ class DetectRequest(BaseModel):
     text: str = Field(..., max_length=100_000)
     redact: bool = False
     min_score: Optional[float] = Field(None, ge=0, le=1)
+    profile: Optional[str] = Field(None, description='Named threshold set, e.g. "pages" for scanned web pages')
 
 
 class BatchRequest(BaseModel):
     texts: list[str] = Field(..., max_length=256)
     redact: bool = False
     min_score: Optional[float] = Field(None, ge=0, le=1)
+    profile: Optional[str] = Field(None, description='Named threshold set, e.g. "pages" for scanned web pages')
 
 
 class Entity(BaseModel):
@@ -44,9 +46,11 @@ class DetectResponse(BaseModel):
     took_ms: float
 
 
-def _run(text, redact, min_score):
+def _run(text, redact, min_score, profile=None):
     t = time.perf_counter()
-    ents = detector.detect(text, min_score)
+    if profile is not None and profile not in detector.profiles:
+        raise HTTPException(422, f"unknown profile; available: {sorted(detector.profiles)}")
+    ents = detector.detect(text, min_score, profile=profile)
     return DetectResponse(has_pii=bool(ents), entities=ents,
                           redacted=detector.redact(text, ents) if redact else None,
                           took_ms=round((time.perf_counter() - t) * 1000, 3))
@@ -59,9 +63,9 @@ def healthz():
 
 @app.post("/v1/detect", response_model=DetectResponse)
 def detect(req: DetectRequest):
-    return _run(req.text, req.redact, req.min_score)
+    return _run(req.text, req.redact, req.min_score, req.profile)
 
 
 @app.post("/v1/detect/batch", response_model=list[DetectResponse])
 def detect_batch(req: BatchRequest):
-    return [_run(t, req.redact, req.min_score) for t in req.texts]
+    return [_run(t, req.redact, req.min_score, req.profile) for t in req.texts]

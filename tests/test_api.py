@@ -101,3 +101,21 @@ def test_scan_finds_the_scanned_persons_name():
     assert any(e["type"] == "EMAIL" and e["text"] == "jana@beispielova.berlin" for e in res)
     assert [e["type"] for e in person_spans("JANA BEISPIELOVA", ["Jana Beispielova"])] == ["FIRST_NAME", "LAST_NAME"]
     assert [e["type"] for e in person_spans("Jana Beispielova", ["Jana Beispielova"], split_names=False)] == ["PERSON"]
+
+
+def test_pages_profile_and_legal_form_rule():
+    from tarnkappe.detect import Detector
+    det = Detector()
+    page = "Startseite\nÜber uns\nKontakt\nNordwind Logistik GmbH & Co. KG\nGeschäftsführerin: Jana Beispielova\nImpressum"
+    for kw in ({}, {"profile": "pages"}):
+        got = [(e["type"], e["text"]) for e in det.detect(page, **kw)]
+        assert ("ORGANIZATION", "Nordwind Logistik GmbH & Co. KG") in got          # a company by rule, whatever the thresholds
+        assert not any("\n" in t for _, t in got)                                  # no entity runs across a line break
+    assert len(det.detect(page, profile="pages")) <= len(det.detect(page))
+    r = client.post("/v1/detect", json={"text": page, "profile": "pages"})
+    assert r.status_code == 200
+    assert client.post("/v1/detect", json={"text": page, "profile": "nope"}).status_code == 422
+    try:
+        det.detect(page, profile="nope"); assert False
+    except ValueError:
+        pass

@@ -24,5 +24,5 @@ Homepage = "https://github.com/ncserny/betterprivacy-tarnkappe"
 packages = ["tarnkappe"]
 
 [tool.setuptools.package-data]
-tarnkappe = ["model/tagger.int8.onnx", "model/vectors.npz", "model/first_names.txt", "model/thresholds.json",
+tarnkappe = ["model/tagger.int8.onnx", "model/vectors.npz", "model/first_names.txt", "model/thresholds.json", "model/profiles.json",
              "model/LICENSE", "model/README.md"]

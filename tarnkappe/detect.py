@@ -48,7 +48,7 @@ ZIP_MAYBE = re.compile(
     r"|\d{3}\s\d{2}"                                    # Sweden, Czechia 114 55
     r"|\d{5}|\d{4})\b")
 ZIP_KEYWORD = re.compile(r"(?:PLZ|Postleitzahl|ZIP(?: code)?|Zip(?: code)?|zip(?: code)?|Postcode|postcode|"
-                         r"Postal code|postal code)\s*[:#]?\s*$")
+                         r"Postal code|postal code)\s*(?:[:#]|is|ist|lautet|=)?\s*$")
 US_STATE = re.compile(r"\b(?:A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|"
                       r"O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY]),?\s$")
 GAP = re.compile(r"^[\s,;|·\-\"']{0,4}$")              # what may sit between a postcode and its neighbour
@@ -132,6 +132,9 @@ class Detector:
         tp = os.path.join(model_dir, "thresholds.json")
         if os.path.exists(tp):
             self.thresholds.update(json.load(open(tp)))
+        # named threshold sets for particular kinds of text, e.g. "pages" for scanned web pages
+        pp = os.path.join(model_dir, "profiles.json")
+        self.profiles = json.load(open(pp)) if os.path.exists(pp) else {}
         so = ort.SessionOptions()
         so.intra_op_num_threads = threads
         so.inter_op_num_threads = 1
@@ -169,7 +172,7 @@ class Detector:
             end, sentence = None, None
             for i in range(start + max_tokens, start + max_tokens // 2, -1):
                 gap = text[toks[i - 1][2]:toks[i][1]]
-                if "\n" in gap:
+                if toks[i - 1][0][0] == "\n":
                     end = i
                     break
                 if sentence is None and toks[i - 1][0] in ".!?" and gap:
@@ -189,6 +192,7 @@ class Detector:
         best = tp.argmax(-1)
         thr = np.array([thresholds[t] for t in TYPES])[best]
         is_ent = (1.0 - probs[:, 0]) >= thr
+        is_ent &= np.array([t[0][0] != "\n" for t in toks])       # a line break always ends an entity
         rows = np.arange(len(best))
         begin = b[rows, best] >= i[rows, best]
         tags = np.where(is_ent, 1 + 2 * best + np.where(begin, 0, 1), 0)
@@ -228,14 +232,28 @@ class Detector:
         return [mk("FIRST_NAME", parts[0][1], parts[cut - 1][2]), mk("LAST_NAME", parts[cut][1], parts[-1][2])]
 
     # ---- public API ----
-    def detect(self, text, min_score=None, split_names=True, known_companies=()):
+    def detect(self, text, min_score=None, split_names=True, known_companies=(), profile=None):
         """min_score: one threshold for all model types (0..1); default: the tuned per-type values.
+        profile: a named threshold set from profiles.json. The default thresholds favour finding
+        everything, also in tweets and chat; "pages" flags fewer menu words and product names on
+        web pages at the cost of names in informal text.
         known_companies: names to flag as ORGANIZATION wherever they appear (see tarnkappe/scan.py)."""
         thr = None if min_score is None else {t: min_score for t in TYPES}
+        if profile and min_score is None:
+            if profile not in self.profiles:
+                raise ValueError(f"unknown profile {profile!r}; available: {sorted(self.profiles)}")
+            thr = {**self.thresholds, **self.profiles[profile]}
+        from .scan import LEGAL, legal_form_spans
         rx = regex_spans(text, self.phone_regions)
         rx.sort(key=lambda s: s["start"] - s["end"])       # longer regex hit wins
+        model = [s for s in self._model_spans(text, thr)
+                 if re.search(r"[^\W\d_]{2}", text[s["start"]:s["end"]])                    # not just "&", "B" or an emoji
+                 and not (s["type"] == "ORG" and re.fullmatch(LEGAL, text[s["start"]:s["end"]]))]   # not "GmbH" alone
+        # "<Name> GmbH" is a company by rule, unless the tagger already has a longer company span around it
+        rules = [r for r in legal_form_spans(text)
+                 if not any(m["type"] == "ORG" and m["start"] <= r["start"] and m["end"] >= r["end"] for m in model)]
         kept = []
-        for s in rx + self._model_spans(text, thr):
+        for s in rx + rules + model:
             if all(s["end"] <= k["start"] or s["start"] >= k["end"] for k in kept):
                 kept.append(s)
         kept += zip_spans(text, kept)
