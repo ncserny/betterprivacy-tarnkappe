@@ -23,6 +23,6 @@ def test_dates_after_cue_are_not_phones():
 
 
 def test_company_name_shared_after_two_pages():
-    pages = ["Victory Park Capital and Cherry Ventures invested.", "Cherry Ventures led the round.", "Thanks to cherry ventures."]
+    pages = ["Accel Partners and Index Ventures invested.", "Index Ventures led the round.", "Thanks to index ventures."]
     res = detect_scan(det, pages, profile="pages")
     assert any(e["type"] == "ORGANIZATION" for e in res[2])

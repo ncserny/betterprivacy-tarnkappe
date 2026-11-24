@@ -8,7 +8,7 @@ because every name comes from that person's own results.
 
     from tarnkappe import Detector
     from tarnkappe.scan import detect_scan
-    results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"],
+    results = detect_scan(Detector(), page_texts, profile_companies=["Nordwind Logistik"],
                           profile_names=["Jana Beispiel"])
 
 The scanned person's own name is known before any page is read. Passing it as profile_names
@@ -21,7 +21,7 @@ LEGAL = (r"(?:GmbH\s*&\s*Co\.?\s*KGaA|GmbH\s*&\s*Co\.?\s*KG|gGmbH|GmbH|GMBH|mbH|
          r"e\.\s?V\.|e\.\s?K\.|eG|GbR|Inc\.?|INC\.?|LLC|L\.L\.C\.|Ltd\.?|LTD\.?|Limited|LIMITED|LLP|L\.P\.|LP|PLC|plc|Corp\.?|CORP\.?|"
          r"Corporation|CORPORATION|S\.A\.U?|SA\.?|S\.p\.A\.|SpA|SPA|S\.a\.?\s?r\.l\.|S\.à\s?r\.l\.|SAS|S\.A\.S\.|SARL|SRL|S\.r\.l\.|S\.L\.U?\.?|SLU?|"
          r"B\.V\.|BV|N\.V\.|NV|C\.V\.|AB|Oy|ApS|A/S|AS|ASA|Sp\.\s?z\s?o\.o\.)")
-# "Nordwind Logistik GmbH", "compuccino GmbH", "INNSIDES INTERIORS UG": up to five name words on one line, then a legal form
+# "Nordwind Logistik GmbH", "Kranich Media GmbH", "BEISPIEL INTERIORS UG": up to five name words on one line, then a legal form
 _W = r"[\w&+'’-]*(?:\.[\w&+'’-]+)*"                      # dots only inside a word ("blog.de"), never at its end
 _NOT_FORM = r"(?!" + LEGAL + r"(?![\w-]))"                  # a name word is never itself a legal form
 _CAP = _NOT_FORM + r"[A-ZÄÖÜ0-9]" + _W
@@ -147,7 +147,7 @@ def harvest(text, entities, confident=None):
                 continue
             out.add(name)
             last = name.split()[-1]
-            # "Berliner Medienagentur compuccino GmbH": a lower-case final word is the brand itself
+            # "Berliner Medienagentur kranichblau GmbH": a lower-case final word is the brand itself
             if " " in name and last[0].islower() and len(last) >= 4 and last.lower() not in GENERIC:
                 out.add(last)
         if bare_name(e["text"].split("\n")[-1]):

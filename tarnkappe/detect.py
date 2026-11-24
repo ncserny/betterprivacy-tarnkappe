@@ -46,7 +46,7 @@ TITLE_BEFORE = re.compile(r"(?i)(?:herr|frau|dr|prof|mr|mrs|ms|miss|sir|von|van|
 
 def brand_not_person(text, s, lex):
     """A one-word person guess that the company lexicon knows mostly as a company, with no title or
-    first name in front: "Burda", "Bertelsmann", "Springer". Surnames such as "Müller" stay persons."""
+    first name in front: "Porsche", "Lufthansa", "Siemens". Surnames such as "Müller" stay persons."""
     w = text[s["start"]:s["end"]]
     if not re.fullmatch(r"[A-ZÄÖÜ][\w-]{3,}", w):
         return False
@@ -348,7 +348,7 @@ class Detector:
                  if re.search(r"[^\W\d_]{2}", text[s["start"]:s["end"]])                    # not just "&", "B" or an emoji
                  and not (s["type"] == "ORG" and re.fullmatch(LEGAL, text[s["start"]:s["end"]]))   # not "GmbH" alone
                  and not (s["type"] == "ORG" and not_a_company(text, s))]
-        if self.org_cut(profile) is not None:              # "Burda", "Bertelsmann": a lone surname-like word that
+        if self.org_cut(profile) is not None:              # "Porsche", "Lufthansa": a lone surname-like word that
             for s in model:                                 # mostly names a company is one
                 if s["type"] == "PERSON" and brand_not_person(text, s, self.orgcheck.lex):
                     s["type"] = "ORG"

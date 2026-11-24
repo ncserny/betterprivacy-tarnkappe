@@ -305,7 +305,7 @@ not clean.
 2. A company name accepted by the company check on two pages of one scan is matched on every page of that scan
    (before: only names the tagger scored 0.9 or more on two pages).
 3. A one-word "person" with no title or first name in front becomes a company when the company lexicon mostly knows
-   the word as a company ("Burda", "Bertelsmann", "Springer"); surnames such as "Müller" stay persons.
+   the word as a company ("Porsche", "Lufthansa", "Siemens"); surnames such as "Müller" stay persons.
 
 The context rule was tuned on the 21 fresh snippets of v0.4, where it raised companies found from 62% to 86%. To see if
 that holds, 57 new snippets from five consenting people's scans were labelled by hand (persons and companies; 102
@@ -323,8 +323,7 @@ hand-labelled snippets together (all now development data), companies found is 6
 correct.
 
 What the remaining misses look like: brands the tagger never proposes (a software tool, a blogging platform, agency
-and consultancy names, small startup names in a list), and brand names that look like surnames ("Burson-Marsteller",
-"polisphere") tagged as persons. A larger change to the tagger is needed to reach the 80% bar, planned for v0.6.
+and consultancy names, small startup names in a list), and brand names that look like surnames, tagged as persons. A larger change to the tagger is needed to reach the 80% bar, planned for v0.6.
 
 ## v0.4: company detection
 

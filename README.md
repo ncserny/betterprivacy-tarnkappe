@@ -174,7 +174,7 @@ tuned on its training split, and the 99.2% is from its held-out test split (v0.4
 **What v0.5 changed for companies:** little, measured honestly. A context rule ("worked at X", "bei X", "Agentur X")
 looked strong on the 21 snippets it was tuned on (86% found) but added one point on 57 new ones. The released version
 also shares a company name across a scan once the company check accepted it on two pages, and turns a one-word
-"person" such as "Burda" or "Bertelsmann" into a company when the lexicon mostly knows it as one. On the 57 snippets,
+"person" such as "Porsche" or "Lufthansa" into a company when the lexicon mostly knows it as one. On the 57 snippets,
 now development data, that gives 74% found and 76% correct; a clean figure needs the next labelled batch. Most
 remaining misses are brands the tagger never proposes (a software tool, an agency name, small startups).
 
