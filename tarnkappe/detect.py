@@ -157,6 +157,8 @@ class Detector:
         # named threshold sets for particular kinds of text, e.g. "pages" for scanned web pages
         pp = os.path.join(model_dir, "profiles.json")
         self.profiles = json.load(open(pp)) if os.path.exists(pp) else {}
+        from .orgcheck import OrgCheck
+        self.orgcheck = OrgCheck(model_dir)
         so = ort.SessionOptions()
         so.intra_op_num_threads = threads
         so.inter_op_num_threads = 1
@@ -254,17 +256,31 @@ class Detector:
         return [mk("FIRST_NAME", parts[0][1], parts[cut - 1][2]), mk("LAST_NAME", parts[cut][1], parts[-1][2])]
 
     # ---- public API ----
-    def detect(self, text, min_score=None, split_names=True, known_companies=(), profile=None):
+    def org_cut(self, profile):
+        """The company check's cut-off for a profile (None: no check)."""
+        return self.profiles.get(profile, {}).get("org_check") if profile and self.orgcheck.ready else None
+
+    def check_orgs(self, text, entities, cut):
+        """Drop company detections the second check (tarnkappe/orgcheck.py) rates below `cut`.
+        Companies found by the legal-form rule are kept."""
+        if cut is None:
+            return entities
+        orgs = [e for e in entities if e["type"] == "ORGANIZATION" and e.get("source") != "rule"]
+        drop = {id(e) for e, p in zip(orgs, self.orgcheck.probs(text, orgs)) if p < cut}
+        return [e for e in entities if id(e) not in drop]
+
+    def detect(self, text, min_score=None, split_names=True, known_companies=(), profile=None, org_check=True):
         """min_score: one threshold for all model types (0..1); default: the tuned per-type values.
         profile: a named threshold set from profiles.json. The default thresholds favour finding
         everything, also in tweets and chat; "pages" flags fewer menu words and product names on
-        web pages at the cost of names in informal text.
-        known_companies: names to flag as ORGANIZATION wherever they appear (see tarnkappe/scan.py)."""
+        web pages at the cost of names in informal text, and runs the second check on companies.
+        known_companies: names to flag as ORGANIZATION wherever they appear (see tarnkappe/scan.py).
+        org_check: False skips the company check (detect_scan runs it once at the end)."""
         thr = None if min_score is None else {t: min_score for t in TYPES}
         if profile and min_score is None:
             if profile not in self.profiles:
                 raise ValueError(f"unknown profile {profile!r}; available: {sorted(self.profiles)}")
-            thr = {**self.thresholds, **self.profiles[profile]}
+            thr = {**self.thresholds, **{k: v for k, v in self.profiles[profile].items() if k in TYPES}}
         from .scan import LEGAL, legal_form_spans
         rx = regex_spans(text, self.phone_regions)
         rx.sort(key=lambda s: s["start"] - s["end"])       # longer regex hit wins
@@ -297,6 +313,8 @@ class Detector:
         if known_companies:
             from .scan import apply_known
             out = apply_known(text, out, known_companies)
+        if org_check:
+            out = self.check_orgs(text, out, self.org_cut(profile))
         return out
 
     def redact(self, text, entities=None):

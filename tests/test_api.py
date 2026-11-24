@@ -135,3 +135,14 @@ def test_confident_names_need_two_pages():
     ents = [{"type": "ORGANIZATION", "text": "Nordwind", "start": 0, "end": 8, "score": 0.99, "source": "model"}]
     sure = set()
     assert harvest("Nordwind", ents, sure) == set() and sure == {"Nordwind"}   # collected, not shared on its own
+
+
+def test_company_check_runs_with_pages_profile():
+    from tarnkappe.detect import Detector
+    det = Detector()
+    assert det.orgcheck.ready and det.org_cut("pages") is not None and det.org_cut(None) is None
+    text = "Impressum\nNordwind Logistik GmbH\nGeschäftsführerin: Jana Beispielova"
+    got = [(e["type"], e["text"]) for e in det.detect(text, profile="pages")]
+    assert ("ORGANIZATION", "Nordwind Logistik GmbH") in got            # legal-form companies always pass the check
+    p = det.orgcheck.probs(text, [e for e in det.detect(text) if e["type"] == "ORGANIZATION"])
+    assert all(0.0 <= x <= 1.0 for x in p)

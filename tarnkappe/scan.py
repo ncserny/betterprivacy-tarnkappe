@@ -17,9 +17,10 @@ or inside a domain name ("beispiel.berlin").
 """
 import re
 
-LEGAL = (r"(?:GmbH\s*&\s*Co\.?\s*KGaA|GmbH\s*&\s*Co\.?\s*KG|gGmbH|GmbH|GMBH|mbH|gUG|UG\s*\(haftungsbeschränkt\)|UG|AG|KGaA|KG|OHG|SE|"
-         r"e\.\s?V\.|e\.\s?K\.|eG|GbR|Inc\.?|INC\.?|LLC|Ltd\.?|LTD\.?|Limited|LIMITED|LLP|PLC|plc|Corp\.?|Corporation|S\.A\.|S\.p\.A\.|SAS|SARL|"
-         r"B\.V\.|BV|N\.V\.|S\.r\.l\.|AB|Oy|ApS|A/S)")
+LEGAL = (r"(?:GmbH\s*&\s*Co\.?\s*KGaA|GmbH\s*&\s*Co\.?\s*KG|gGmbH|GmbH|GMBH|mbH|gUG|UG\s*\(haftungsbeschränkt\)|UG|GUG|AG|KGaA|KG|OHG|SE|"
+         r"e\.\s?V\.|e\.\s?K\.|eG|GbR|Inc\.?|INC\.?|LLC|L\.L\.C\.|Ltd\.?|LTD\.?|Limited|LIMITED|LLP|L\.P\.|LP|PLC|plc|Corp\.?|CORP\.?|"
+         r"Corporation|CORPORATION|S\.A\.U?|SA\.?|S\.p\.A\.|SpA|SPA|S\.a\.?\s?r\.l\.|S\.à\s?r\.l\.|SAS|S\.A\.S\.|SARL|SRL|S\.r\.l\.|S\.L\.U?\.?|SLU?|"
+         r"B\.V\.|BV|N\.V\.|NV|C\.V\.|AB|Oy|ApS|A/S|AS|ASA|Sp\.\s?z\s?o\.o\.)")
 # "Nordwind Logistik GmbH", "compuccino GmbH", "INNSIDES INTERIORS UG": up to five name words on one line, then a legal form
 _W = r"[\w&+'’-]*(?:\.[\w&+'’-]+)*"                      # dots only inside a word ("blog.de"), never at its end
 _NOT_FORM = r"(?!" + LEGAL + r"(?![\w-]))"                  # a name word is never itself a legal form
@@ -27,7 +28,7 @@ _CAP = _NOT_FORM + r"[A-ZÄÖÜ0-9]" + _W
 _LOW = _NOT_FORM + r"[a-zäöü]" + _W
 COMPANY = re.compile(r"(?<![\w@.-])((?:" + _CAP + r"[ \t]+(?:&[ \t]+)?){0,4}(?:" + _LOW + r"[ \t]+)?(?:" + _CAP + "|" + _LOW +
                      r"))[ \t]*,?[ \t]+" + LEGAL + r"(?![\w-])")
-RISKY = {"AB", "SE", "SAS", "Oy", "BV", "NV", "AG"}             # short forms that are also ordinary words or model names
+RISKY = {"AB", "SE", "SAS", "Oy", "BV", "NV", "AG", "SA", "SA.", "SL", "SLU", "LP", "AS", "SPA", "SpA"}             # short forms that are also ordinary words or model names
 LEADING = {"die", "der", "das", "den", "dem", "des", "the", "bei", "von", "vom", "für", "mit", "im", "in", "an", "am", "und", "and", "at",
            "by", "for", "with", "als", "zur", "zum", "a", "an", "of", "from", "seit", "since", "auch", "laut", "ein", "eine"}
 SUFFIX = re.compile(r"[\s,]+" + LEGAL + r"(?:\s*\(haftungsbeschränkt\))?\s*$")
@@ -187,7 +188,7 @@ def detect_scan(detector, texts, profile_companies=(), profile_names=(), **kwarg
     form is shared from one page; a name the tagger is only very sure about must be found on two pages.
     profile_names: the scanned person's own name(s), matched on every page.
     Returns one entity list per text, in order."""
-    first = [detector.detect(t, **kwargs) for t in texts]
+    first = [detector.detect(t, org_check=False, **kwargs) for t in texts]
     names = set(profile_companies)
     pages_with = {}
     for t, ents in zip(texts, first):
@@ -199,4 +200,6 @@ def detect_scan(detector, texts, profile_companies=(), profile_names=(), **kwarg
             pages_with["#" + n.lower()] += 1
     names |= {n for k, v in pages_with.items() if not k.startswith("#") and pages_with["#" + k] >= 2 for n in v}
     split = kwargs.get("split_names", True)
-    return [apply_known(t, ents, names, profile_names, split) for t, ents in zip(texts, first)]
+    cut = detector.org_cut(kwargs.get("profile")) if hasattr(detector, "org_cut") else None
+    return [detector.check_orgs(t, apply_known(t, ents, names, profile_names, split), cut) if cut is not None
+            else apply_known(t, ents, names, profile_names, split) for t, ents in zip(texts, first)]

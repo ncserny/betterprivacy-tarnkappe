@@ -1,4 +1,4 @@
-# Results (v0.3 development, model retrained for web pages)
+# Results (v0.4.0)
 
 Produced by `python bench.py --spacy` on 2 CPU cores, shipped int8 model + pattern layer, one thread.
 
@@ -9,8 +9,8 @@ How to read this:
 - **PII caught** counts an annotated item as found if any detection overlaps it. This is the number that matters for redaction.
 - Thresholds were tuned on development splits only. The EWT, GermEval, PUD, WNUT and BTC test numbers are clean.
 - The model was retrained with the Broad Twitter Corpus (training sections) and casing augmentation; its test section is held out.
-- The block below is the current model: it reads line breaks and was also trained on 11,000 Wikipedia paragraphs labelled
-  by GLiNER2-PII (see "Retraining for web pages"). It is run here with the default thresholds. Figures in the GLiNER
+- The block below is v0.4.0: the v0.3 recipe plus page-like examples built from about 8,300 company names (see
+  "v0.4: company detection"). It is run here with the default thresholds. Figures in the GLiNER
   comparison and in "First check on real scanned pages" further down were measured with the model before that retraining.
 - The phone and postcode rules were written after looking at misses on the Presidio set and on `eval/challenge_v1.txt`,
   so those two are **not** clean evidence for phones and postcodes.
@@ -19,63 +19,63 @@ How to read this:
 ```
 == real annotated text: strict F1 on person / organisation / location, and on person alone ==
 ewt_test (English web text)
-   ours      all F1 0.654 (P 0.595 R 0.727)   person F1 0.752 (P 0.709 R 0.802)   1.32 ms/sentence
-   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   4.36 ms/sentence
-   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   4.50 ms/sentence
+   ours      all F1 0.656 (P 0.591 R 0.737)   person F1 0.774 (P 0.716 R 0.842)   1.22 ms/sentence
+   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   6.24 ms/sentence
+   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   4.22 ms/sentence
 wnut17_test (social media)
-   ours      all F1 0.461 (P 0.390 R 0.564)   person F1 0.527 (P 0.437 R 0.664)   1.59 ms/sentence
-   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   4.47 ms/sentence
-   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   4.07 ms/sentence
+   ours      all F1 0.453 (P 0.381 R 0.557)   person F1 0.532 (P 0.440 R 0.671)   1.40 ms/sentence
+   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   2.99 ms/sentence
+   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   3.27 ms/sentence
 btc_test (tweets)
-   ours      all F1 0.594 (P 0.586 R 0.601)   person F1 0.707 (P 0.712 R 0.701)   1.99 ms/sentence
-   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   4.12 ms/sentence
-   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   4.17 ms/sentence
+   ours      all F1 0.606 (P 0.594 R 0.619)   person F1 0.736 (P 0.733 R 0.738)   1.52 ms/sentence
+   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   3.16 ms/sentence
+   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   3.43 ms/sentence
 germeval_test (German Wikipedia/news)
-   ours      all F1 0.704 (P 0.630 R 0.798)   person F1 0.774 (P 0.714 R 0.845)   1.72 ms/sentence
-   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   4.43 ms/sentence
-   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   5.24 ms/sentence
+   ours      all F1 0.690 (P 0.614 R 0.786)   person F1 0.768 (P 0.705 R 0.843)   1.60 ms/sentence
+   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   3.99 ms/sentence
+   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   4.06 ms/sentence
 pud_de (German news/Wikipedia)
-   ours      all F1 0.702 (P 0.646 R 0.769)   person F1 0.745 (P 0.705 R 0.789)   1.79 ms/sentence
-   spaCy sm  all F1 0.642 (P 0.599 R 0.691)   person F1 0.713 (P 0.710 R 0.715)   4.09 ms/sentence
-   spaCy md  all F1 0.714 (P 0.675 R 0.757)   person F1 0.796 (P 0.795 R 0.797)   5.01 ms/sentence
+   ours      all F1 0.709 (P 0.651 R 0.777)   person F1 0.750 (P 0.709 R 0.797)   1.57 ms/sentence
+   spaCy sm  all F1 0.642 (P 0.599 R 0.691)   person F1 0.713 (P 0.710 R 0.715)   3.78 ms/sentence
+   spaCy md  all F1 0.714 (P 0.675 R 0.757)   person F1 0.796 (P 0.795 R 0.797)   4.02 ms/sentence
 
 == PII caught at all (any overlap, any label) ==
-   presidio (templates unseen in training)       recall 0.961  precision 0.936
-   our synthetic, new names + new phrasing       recall 0.985  precision 0.965
+   presidio (templates unseen in training)       recall 0.949  precision 0.941
+   our synthetic, new names + new phrasing       recall 0.981  precision 0.970
    ewt_test persons only                         recall 0.958
-   germeval_test persons only                    recall 0.958
-   wnut17_test persons only (social media)       recall 0.797
-   btc_test persons only (tweets)                recall 0.798
+   germeval_test persons only                    recall 0.962
+   wnut17_test persons only (social media)       recall 0.853
+   btc_test persons only (tweets)                recall 0.832
       presidio CREDIT_CARD     recall 0.965
       presidio EMAIL_ADDRESS   recall 1.000
-      presidio GPE             recall 0.943
+      presidio GPE             recall 0.948
       presidio IBAN_CODE       recall 1.000
       presidio IP_ADDRESS      recall 1.000
-      presidio ORGANIZATION    recall 0.963
+      presidio ORGANIZATION    recall 0.970
       presidio PERSON          recall 0.998
-      presidio PHONE_NUMBER    recall 0.750
-      presidio STREET_ADDRESS  recall 0.982
-      presidio ZIP_CODE        recall 0.444
+      presidio PHONE_NUMBER    recall 0.625
+      presidio STREET_ADDRESS  recall 0.942
+      presidio ZIP_CODE        recall 0.333
 
 == release bar on challenge_v1.txt (87 records, 370 annotated items) ==
    PERSON        found  99.3% (133/134)   bar 95%   PASS
-   LOCATION      found  97.9% (92/94)   bar 85%   PASS
-   ORGANIZATION  found  97.1% (34/35)   bar 80%   PASS
+   LOCATION      found  98.9% (93/94)   bar 85%   PASS
+   ORGANIZATION  found 100.0% (35/35)   bar 80%   PASS
    STREET        found  90.6% (29/32)   bar 90%   PASS
    PHONE         found 100.0% (29/29)   bar 95%   PASS
-   ZIP           found 100.0% (27/27)   bar 90%   PASS
+   ZIP           found  96.3% (26/27)   bar 90%   PASS
    EMAIL         found 100.0% (18/18)   bar 99%   PASS  (few examples)
    IBAN          found 100.0% (1/1)   bar 99%   PASS  (few examples)
-   precision            91.1%            bar 85%   PASS
-   all items found 98.1%;  by group: blog 100%, court-record 100%, data-broker 98%, de 99%, directory 95%, en 97%, forum 94%, news 100%, people-search 98%, search-engine 100%, social 100%
+   precision            93.1%            bar 85%   PASS
+   all items found 98.4%;  by group: blog 100%, court-record 100%, data-broker 94%, de 99%, directory 98%, en 98%, forum 94%, news 100%, people-search 100%, search-engine 100%, social 100%
 
 == first / last name split (synthetic, new names + new phrasing) ==
-   F1 0.871 (P 0.852 R 0.890)
+   F1 0.851 (P 0.859 R 0.842)
 
 == latency, 1 CPU thread, 2000 texts, avg 17 tokens ==
-p50 1.65 ms   p95 3.30 ms   p99 3.93 ms
-throughput 565 texts/s, 9372 tokens/s per core
-long document (1068 tokens, 4759 chars): 84.6 ms
+p50 1.41 ms   p95 2.78 ms   p99 3.33 ms
+throughput 652 texts/s, 10828 tokens/s per core
+long document (1068 tokens, 4759 chars): 73.5 ms
 ```
 
 ## Comparison with GLiNER and GLiNER2-PII
@@ -268,6 +268,69 @@ Two changes were then made after looking at these errors (so the figures below a
 
 Company detections remain the weak point: on pages with few real companies most company hits are wrong. Persons, e-mail
 addresses, phone numbers and addresses are the reliable part of v0.3.0.
+
+## v0.4: company detection
+
+v0.3 found most companies on real pages but flagged many other words as companies. v0.4 makes three changes:
+
+1. **Company names in training.** 10,000 page-like examples (imprints, register lists, speaker lists, news sentences,
+   signatures) built from about 8,300 real company names, with and without their legal form, and with job titles,
+   medical fields, page buttons and technology words placed where names usually sit (labelled as not a company).
+   Names: a CC0 sample of European and US companies from CompanyData.com's public datasets, and the STOXX Europe 600 and
+   S&P 500 constituents as listed on Wikipedia. A fifth of each list is held out for testing.
+2. **A second check on company detections** with the `pages` profile (`tarnkappe/orgcheck.py`): gradient-boosted trees
+   (107 KB, ONNX) over 34 features: how often each word appears in company names in labelled text and how common it is,
+   with capitalisation taken into account; form (length, capitals, digits, dots, "&"); surroundings (the word before it,
+   whether it fills a short line, repeats on the page); the tagger's own confidence. Trained on development splits of
+   the public corpora, 950 further Wikipedia paragraphs labelled by GLiNER2-PII, and the company examples. Not trained
+   on hand-labelled pages.
+3. **More legal forms** for the company rule: SL, SLU, SA, SRL, S.a r.l., SpA, LP, L.L.C., NV, AS, ASA, Sp. z o.o.,
+   gUG in capitals, and capitalised variants.
+
+**Fresh test.** 21 snippets from six scans of people who agreed to be scanned, taken from result pages not used before.
+v0.3's answers were saved before the owner labelled persons and companies; v0.4's settings were chosen on the older
+sets and run on these once. The snippets are private.
+
+| `pages` profile, `detect_scan`, scanned person's name | Persons found | Companies found | Company detections correct |
+| --- | --- | --- | --- |
+| v0.3 | 100% | 62% (13/21) | 62% (13/21) |
+| v0.4 tagger without the company check | 97%* | 62% | 72% (13/18) |
+| **v0.4** | 97%* | 62% (13/21) | **87% (13/15)** |
+| v0.4 after adding capitalised "GUG" as a legal form (a miss seen in this test) | 97%* | 67% (14/21) | 88% (14/16) |
+
+\* 28 of 29; the one miss is a two-character mark that is most likely a labelling slip.
+
+v0.3 made eight wrong company flags on this set (a medical field, software tool names, a user name, an abbreviation,
+a greeting); v0.4 makes two (a software name and an abbreviation). The companies v0.4 still misses are mostly
+well-known brands written without a legal form.
+
+**Older hand-labelled sets** (used for tuning v0.3 and for choosing v0.4's settings):
+
+| v0.4, same setup | Persons found | Person detections correct | Companies found | Company detections correct |
+| --- | --- | --- | --- | --- |
+| Owner's scan (27 snippets) | 96.4% | 85.9% | 84.7% | 80.8% |
+| Four other people's scans (38 snippets) | 100% | 87.3% | 67.1% | 80.8% |
+| Four more scans (23 snippets) | 97.4% | 97.4% | 84.6% | 73.3% |
+
+**Held-out company names** (`scripts/eval_company_test.py`, 600 generated texts each, names never seen in training,
+sentence patterns never used in training, `pages` profile; companies labelled as companies / of them without a legal form):
+
+| Names held out from | v0.3 | v0.4 |
+| --- | --- | --- |
+| CompanyData.com sample (2,043 names) | 70.7% / 70.5% | 71.8% / 71.6% |
+| STOXX 600 and S&P 500 plus a German register sample | 59.0% / 56.7% | 57.3% / 55.1% |
+| German register sample only | 56.2% / 50.5% | 51.7% / 46.1% |
+
+In these friendly sentences almost every company detection is correct for both versions, so the company check only
+costs here: without it the same v0.4 tagger reaches 76.1% on the CompanyData names. Finding unfamiliar brand names is
+what a model this small does not learn from more names; a fine-tuned transformer is the likely next step.
+
+**What else moved.** Persons found with the default thresholds: tweets 79.8% → 83.2%, WNUT 79.7% → 85.3%, English
+web text 95.8% (unchanged), German news 95.8% → 96.2%. Presidio: 96.1% → 94.9% caught (phone 75% → 63%, postcode
+44% → 33%), 93.6% → 94.1% of detections real. Challenge set: 98.1% → 98.4%. Median latency 1.4 ms.
+
+**Tried and not kept:** versions trained with a list of 500 German register entries and with the STOXX/S&P list only;
+they were no better on real pages, and the licence of the register list was not checked.
 
 ## Transformer reference
 
