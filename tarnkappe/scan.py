@@ -60,6 +60,61 @@ def legal_form_spans(text):
 SURE = 0.9
 
 
+# Words right before a company name in CVs, bios, press and profiles. The capitalised words after them are proposed as
+# a company; the company check (orgcheck.py) decides. Persons and places the tagger already found are left alone.
+CUE_NOUNS = (r"Agentur|Firma|Unternehmen|Unternehmens|Startups?|Start-ups?|Beteiligungsunternehmens?|Plattform|Marke|Kunden?|"
+             r"agency|company|firm|startup|brand|client|platform|employer|Arbeitgeber")
+CONTEXT = re.compile(
+    r"(?:(?i:\b(?:work(?:s|ed|ing)?|employed|engineer|developer|consultant|intern(?:ship)?|role|position|job|career)\s+(?:at|for|with))"
+    r"|(?i:\b(?:joined|joins|joining|left|leaving|leaves|acquired|acquires|founded|co-?founded|cofounded|launched))"
+    r"|(?i:\b(?:founder|co-?founder|ceo|cto|cfo|coo|director|head|manager|partner|advisor|investor|owner|president|vp)"
+    r"(?:\s+[\w&-]+){0,3}?\s+(?:at|@))"
+    r"|\s@"
+    r"|\b(?:arbeitet(?:e)?|tätig|beschäftigt|angestellt|Praktikum|Ausbildung)\s+(?:bei|für)"
+    r"|\b(?:wechselt(?:e)?|kam|kommt|ging|geht)\s+(?:er\s+|sie\s+)?(?:\w+\s+){0,4}?(?:zu|von)"
+    r"|\b(?:Gesellschafter(?:in)?|Gründer(?:in)?|Mitgründer(?:in)?|Mitinhaber(?:in)?|Inhaber(?:in)?|Geschäftsführer(?:in)?|"
+    r"Partner(?:in)?|Vorstand|Beirat|Berater(?:in)?)\s+(?:\w+\s+){0,3}?(?:bei|von|für)"
+    r"|\b(?:" + CUE_NOUNS + r")"
+    r")[ \t]+(?:(?i:a|an|the|der|die|das|den|dem|des|einer?|einem|eines)[ \t]+)?(?=[A-ZÄÖÜ0-9]|[a-zäöü]+[A-Z]|[a-z]{4})")
+CUE_START = re.compile(r"(?:" + CUE_NOUNS + r")\b")
+NAME_AFTER = re.compile(r"(?:[A-ZÄÖÜ0-9][\w&'’.-]*|[a-zäöü]+[A-Z][\w-]*|[a-zäöü][a-zäöü0-9-]{3,})(?:\s(?:&\s)?[A-ZÄÖÜ][\w&'’.-]*){0,3}")
+NOT_NAMES = {"I", "He", "She", "We", "They", "It", "The", "A", "An", "This", "That", "My", "Our", "His", "Her", "Their",
+             "Er", "Sie", "Es", "Wir", "Ich", "Der", "Die", "Das", "Den", "Dem", "Des", "Ein", "Eine", "Einer", "Mein",
+             "Anfang", "Ende", "Mitte", "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September",
+             "Oktober", "November", "Dezember", "January", "February", "March", "June", "July", "October", "December",
+             "Home", "Senior", "Junior", "Lead", "Head", "Chief", "Mr", "Mrs", "Ms", "Dr", "Herr", "Frau", "Prof"}
+
+
+def context_company_spans(text, entities, common=None):
+    """Company candidates from the words around them: 'worked at Nordwind', 'Senior Advisor bei Nordwind',
+    'Head of Sales @ Nordwind'. Returned with source 'context'; pass them through the company check."""
+    taken = [(e["start"], e["end"]) for e in entities]
+    out = []
+    for m in CONTEXT.finditer(text):
+        n = NAME_AFTER.match(text, m.end())
+        if not n:
+            continue
+        name = n.group().rstrip(".'’-")
+        words = name.split()
+        while words and words[-1] in NOT_NAMES:
+            words.pop()
+        if not words or words[0] in NOT_NAMES or CUE_START.match(words[0]) or len(name) < 3 or "\n" in name:
+            continue
+        if words[0].islower():                        # a lower-case brand only right after "Agentur" / "agency" ...
+            if not re.search(r"(?:Agentur|agency|Firma|company)\s+$", text[max(0, n.start() - 12):n.start()]):
+                continue
+            st = (common or {}).get(words[0])          # ... and only if it is not a common word ("erhalten")
+            if st and st[0] >= 20:
+                continue
+        name = " ".join(words)
+        a, b = n.start(), n.start() + len(name)
+        if any(x < b and y > a for x, y in taken):
+            continue
+        out.append({"type": "ORGANIZATION", "start": a, "end": b, "score": 0.5, "source": "context", "text": name})
+        taken.append((a, b))
+    return out
+
+
 def bare_name(company):
     """'appstretto UG (haftungsbeschränkt)' -> 'appstretto'; None if there is no legal suffix or nothing distinctive is left."""
     m = SUFFIX.search(company)
@@ -183,23 +238,33 @@ def apply_known(text, entities, names, person_names=(), split_names=True):
     return sorted(keep + extra, key=lambda e: e["start"])
 
 
+def _shareable(name):
+    return ("\n" not in name and 4 <= len(name) <= 40 and len(name.split()) <= 4 and (name[0].isupper() or "." in name)
+            and not all(w.lower() in GENERIC for w in name.split()))
+
+
 def detect_scan(detector, texts, profile_companies=(), profile_names=(), **kwargs):
-    """Detect PII on all pages of one scan, sharing company names between pages. A name with a legal
-    form is shared from one page; a name the tagger is only very sure about must be found on two pages.
+    """Detect PII on all pages of one scan, sharing company names between pages.
+    A name with a legal form is shared from one page. Any other company name is shared when the
+    company check accepted it on at least two different pages.
     profile_names: the scanned person's own name(s), matched on every page.
     Returns one entity list per text, in order."""
     first = [detector.detect(t, org_check=False, **kwargs) for t in texts]
-    names = set(profile_companies)
-    pages_with = {}
-    for t, ents in zip(texts, first):
-        confident = set()
-        names |= harvest(t, ents, confident)
-        for n in confident:
-            pages_with[n.lower()] = pages_with.get(n.lower(), set()) | {n}
-            pages_with.setdefault("#" + n.lower(), 0)
-            pages_with["#" + n.lower()] += 1
-    names |= {n for k, v in pages_with.items() if not k.startswith("#") and pages_with["#" + k] >= 2 for n in v}
     split = kwargs.get("split_names", True)
     cut = detector.org_cut(kwargs.get("profile")) if hasattr(detector, "org_cut") else None
-    return [detector.check_orgs(t, apply_known(t, ents, names, profile_names, split), cut) if cut is not None
-            else apply_known(t, ents, names, profile_names, split) for t, ents in zip(texts, first)]
+    names = set(profile_companies)
+    pages = {}
+    for t, ents in zip(texts, first):
+        names |= harvest(t, ents)
+        ok = detector.check_orgs(t, ents, cut) if cut is not None else ents
+        mine = {e["text"].strip() for e in ok if e["type"] == "ORGANIZATION" and e.get("source") in ("model", "context")
+                and _shareable(e["text"].strip())}
+        mine = {n for n in mine if cut is not None or any(e["text"].strip() == n and e.get("score", 0) >= SURE for e in ents)}
+        for n in mine:
+            pages.setdefault(n.lower(), [set(), 0]); pages[n.lower()][0].add(n); pages[n.lower()][1] += 1
+    names |= {n for forms, k in pages.values() if k >= 2 for n in forms}
+    out = []
+    for t, ents in zip(texts, first):
+        ents = apply_known(t, ents, names, profile_names, split)
+        out.append(detector.check_orgs(t, ents, cut) if cut is not None else ents)
+    return out

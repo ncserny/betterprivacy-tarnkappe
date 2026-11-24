@@ -26,12 +26,36 @@ HERE = os.path.join(os.path.dirname(__file__), "model")
 # Structured identifiers: a pattern (plus checksum where one exists) beats any model.
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}")
 IBAN_RE = re.compile(r"\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,3})?\b")
-CARD_RE = re.compile(r"(?<!\d )(?<![\w.])\d(?:[ -]?\d){12,18}\b")
+CARD_RE = re.compile(r"(?<!\d )(?<![\w.])[1-9](?:[ -]?\d){12,18}\b")   # no card number starts with 0
 IPV4_RE = re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b")
 EXT = r"(?:\s?(?:x|ext\.?)\s?\d{1,5})?"
 PHONE_RE = re.compile(r"(?<!\d )(?<![\w.])(?:\+|00)\d{1,3}[\s\-/.]?(?:\(?\d{1,5}\)?[\s\-/.]?){2,5}\d{2,4}" + EXT + r"(?!\w)")
 # national formats that are unambiguous: 555-123-4567, 555.123.4567x89, (030) 1234 5678
 PHONE2_RE = re.compile(r"(?<!\d )(?<![\w.\-])(?:\(\d{2,5}\)\s?\d{3,4}|\d{3}[-.]\d{3})[-.\s]\d{4}" + EXT + r"(?![\w\-])")
+# any run of 7 to 15 digits with phone punctuation; counts only next to a phone word ("call me on", "Tel.", "office")
+PHONE3_RE = re.compile(r"(?<![\w.\-/])\+?\(?\d[\d\s().\-/]{5,20}\d(?![\w\-/])")
+PHONE_BEFORE = re.compile(r"(?i)(?:call(?: me)?(?: on| at)?|phone|tel\.?|telefon|telephone|mobile?|mobil|handy|cell|fax|"
+                          r"whats\s?app|ruf(?:nummer)?|anrufen|erreichbar unter|contact(?: me)? (?:on|at)|"
+                          r"number|nummer|nr\.|contact|kontakt|customer (?:care|service|support)|support|hotline|helpline|service client|"
+                          r"t[ée]l[ée]phone|t[ée]l\.?|telefono|tel[ée]fono|telefone|tlf\.?|puhelin|m[óo]vil|cellulare|portable|"
+                          r"reach (?:us|me|the office|our office) at|ring(?: me| us)?(?: on| at)?)\s*[:#\[(]?\s*$")
+PHONE_AFTER = re.compile(r"(?i)^\s*-?\s*(?:office|fax|mobile|cell|home|work|tel|büro|privat)\b")
+
+TITLE_BEFORE = re.compile(r"(?i)(?:herr|frau|dr|prof|mr|mrs|ms|miss|sir|von|van|de)\.?\s+$")
+
+
+def brand_not_person(text, s, lex):
+    """A one-word person guess that the company lexicon knows mostly as a company, with no title or
+    first name in front: "Burda", "Bertelsmann", "Springer". Surnames such as "Müller" stay persons."""
+    w = text[s["start"]:s["end"]]
+    if not re.fullmatch(r"[A-ZÄÖÜ][\w-]{3,}", w):
+        return False
+    st = lex.get(w.lower())
+    if not st or st[3] < 4 or st[4] < 0.6 * st[3]:
+        return False
+    before = text[max(0, s["start"] - 25):s["start"]]
+    return not TITLE_BEFORE.search(before) and not re.search(r"[A-ZÄÖÜ][a-zäöüß]+[ \t]+$", before)
+
 
 # ---- postcodes -------------------------------------------------------------------------
 # Formats that are distinctive enough to accept on sight.
@@ -44,19 +68,24 @@ ZIP_SURE = re.compile(
 ZIP_MAYBE = re.compile(
     r"\b(?:[A-Z]\d{2}\s?[A-Z0-9]{4}"                    # Ireland T12 X8PN
     r"|\d{4}\s?[A-Z]{2}"                                # Netherlands 1012 AB
+    r"|\d{4}-\d{3}"                                     # Portugal 3610-114
     r"|\d{2}-\d{3}"                                     # Poland 53-320
     r"|\d{3}\s\d{2}"                                    # Sweden, Czechia 114 55
-    r"|\d{5}|\d{4})\b")
+    r"|\d{5}|\d{4}|\d{3})\b")
 ZIP_KEYWORD = re.compile(r"(?:PLZ|Postleitzahl|ZIP(?: code)?|Zip(?: code)?|zip(?: code)?|Postcode|postcode|"
                          r"Postal code|postal code)\s*(?:[:#]|is|ist|lautet|=)?\s*$")
 US_STATE = re.compile(r"\b(?:A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|"
                       r"O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY]),?\s$")
 GAP = re.compile(r"^[\s,;|·\-\"']{0,4}$")              # what may sit between a postcode and its neighbour
+# ... or, after a city, a state or country code: "Aalborg NO 9100", "Austin, TX 78701"
+GAP_CODE = re.compile(r"^[\s,;|·]{0,3}(?:[A-Z]{2,3}|nan)?[\s,;|·]{0,3}$")
+YEAR = re.compile(r"1\d{3}|20\d\d")                  # four digits that are likely a year
 
 TITLES = {"mr", "mrs", "ms", "miss", "dr", "prof", "herr", "herrn", "frau", "sir", "madam", "mx"}
 PARTICLES = {"von", "van", "de", "der", "den", "del", "della", "di", "da", "le", "la", "zu", "bin", "al", "el", "ten"}
 # model label -> public label
 PUBLIC = {"ORG": "ORGANIZATION"}
+CONTEXT_BONUS = 0.2          # how much lower the company check's bar is after "worked at", "joined", "bei", "@"
 # Never a company: a street name ("Obere Feldzeile", "Hauptstraße 12", "Baker Street") or a user name
 # ("jdoe-dev", "@jdoe", "max_1990").
 STREETISH = re.compile(r"(?i)(?:stra(?:ß|ss)e|str\.|gasse|weg|platz|allee|zeile|ufer|damm|ring|steig|chaussee|kai|"
@@ -110,6 +139,14 @@ def regex_spans(text, regions=PHONE_REGIONS):
         for m in rx.finditer(text):
             if sum(c.isdigit() for c in m.group()) >= 8:
                 out.append(("PHONE", m.start(), m.end()))
+    for m in PHONE3_RE.finditer(text):     # any format, when a phone word stands right next to it
+        g = m.group().rstrip(" (-.")
+        digits = sum(c.isdigit() for c in g)
+        if not 7 <= digits <= 15 or re.fullmatch(r"(?:19|20)\d\d[-./]\d\d?[-./]\d\d?|\d\d?[-./]\d\d?[-./](?:19|20)?\d\d", g.strip()):
+            continue
+        if PHONE_BEFORE.search(text[max(0, m.start() - 30):m.start()]) or PHONE_AFTER.match(text[m.start() + len(g):]):
+            if not any(t == "PHONE" and a < m.start() + len(g) and b > m.start() for t, a, b in out):
+                out.append(("PHONE", m.start(), m.start() + len(g)))
     if phonenumbers is not None and sum(c.isdigit() for c in text) >= 7:
         seen = {(a, b) for t, a, b in out if t == "PHONE"}
         for region in regions:
@@ -136,11 +173,25 @@ def zip_spans(text, entities):
         before, after = text[max(0, a - 24):a], text[b:b + 6]
         if after[:1] in ("-", "/", ".", ":") and after[1:2].isdigit() or before[-1:] in ("/", "-", ":", ".", "#", "€", "$"):
             continue                                  # part of a date, time, amount or id
+        num = m.group()
         near_after = any(e["start"] >= b and GAP.match(text[b:e["start"]]) for e in places if e["type"] == "LOCATION")
         near_before = any(e["end"] <= a and GAP.match(text[e["end"]:a]) for e in places)
-        four = len(m.group()) == 4 and m.group().isdigit()
-        ok = bool(ZIP_KEYWORD.search(before)) or near_after or (near_before and not four) or \
-            (bool(US_STATE.search(before)) and len(m.group()) == 5)
+        after_city = any(e["end"] <= a and GAP_CODE.match(text[e["end"]:a]) for e in places if e["type"] == "LOCATION")
+        # address blocks: the number alone on its line, with a street or city on a line next to it
+        ls, le = text.rfind("\n", 0, a) + 1, text.find("\n", b)
+        le = len(text) if le < 0 else le
+        alone = text[ls:le].strip() == num
+        block = alone and any(abs(e["start"] - a) < 120 and text.count("\n", min(e["end"], a), max(e["start"], b)) <= 2
+                              for e in places)
+        four = len(num) == 4 and num.isdigit()
+        three = len(num) == 3 and num.isdigit()
+        keyword = bool(ZIP_KEYWORD.search(before))
+        if three:
+            ok = keyword or block
+        else:
+            ok = keyword or near_after or (near_before and not four) or block or \
+                (after_city and not (four and YEAR.fullmatch(num))) or \
+                (bool(US_STATE.search(before)) and len(num) == 5)
         if ok:
             out.append((a, b))
     return [{"type": "ZIP", "start": a, "end": b, "score": 1.0, "source": "regex"} for a, b in out]
@@ -265,8 +316,13 @@ class Detector:
         Companies found by the legal-form rule are kept."""
         if cut is None:
             return entities
-        orgs = [e for e in entities if e["type"] == "ORGANIZATION" and e.get("source") != "rule"]
-        drop = {id(e) for e, p in zip(orgs, self.orgcheck.probs(text, orgs)) if p < cut}
+        from .scan import context_company_spans
+        orgs = [e for e in entities if e["type"] == "ORGANIZATION" and e.get("source") not in ("rule", "list")]
+        # a company right after "worked at", "joined", "bei", "Title @" has its own evidence: a lower bar
+        others = [e for e in entities if e["type"] != "ORGANIZATION"]
+        cued = context_company_spans(text, others, self.orgcheck.lex)
+        backed = lambda e: e.get("source") == "context" or any(c["start"] < e["end"] and c["end"] > e["start"] for c in cued)
+        drop = {id(e) for e, p in zip(orgs, self.orgcheck.probs(text, orgs)) if p < (cut - CONTEXT_BONUS if backed(e) else cut)}
         return [e for e in entities if id(e) not in drop]
 
     def detect(self, text, min_score=None, split_names=True, known_companies=(), profile=None, org_check=True):
@@ -292,6 +348,10 @@ class Detector:
                  if re.search(r"[^\W\d_]{2}", text[s["start"]:s["end"]])                    # not just "&", "B" or an emoji
                  and not (s["type"] == "ORG" and re.fullmatch(LEGAL, text[s["start"]:s["end"]]))   # not "GmbH" alone
                  and not (s["type"] == "ORG" and not_a_company(text, s))]
+        if self.org_cut(profile) is not None:              # "Burda", "Bertelsmann": a lone surname-like word that
+            for s in model:                                 # mostly names a company is one
+                if s["type"] == "PERSON" and brand_not_person(text, s, self.orgcheck.lex):
+                    s["type"] = "ORG"
         # "<Name> GmbH" is a company by rule, unless the tagger already has a longer company span around it
         rules = [r for r in legal_form_spans(text)
                  if not any(m["type"] == "ORG" and m["start"] <= r["start"] and m["end"] >= r["end"] for m in model)]
@@ -310,6 +370,9 @@ class Detector:
         out.sort(key=lambda s: s["start"])
         for s in out:
             s["text"] = text[s["start"]:s["end"]]
+        if self.org_cut(profile) is not None:              # "worked at X", "bei X": proposals for the company check
+            from .scan import context_company_spans
+            out = sorted(out + context_company_spans(text, out, self.orgcheck.lex), key=lambda s: s["start"])
         if known_companies:
             from .scan import apply_known
             out = apply_known(text, out, known_companies)
