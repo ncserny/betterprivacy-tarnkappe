@@ -112,8 +112,8 @@ results = detect_scan(Detector(), page_texts, profile_companies=["Nordwind Logis
 Detector().detect(text, known_companies=["Nordwind Logistik"])                          # or for a single text
 ```
 
-Company names the tagger is very sure about are shared in the same way, but only when they were found on two
-different pages, so one wrong guess is not spread across the scan. `detect_scan`
+Other company names are shared in the same way, but only when the company check accepted them on two different
+pages, so one wrong guess is not spread across the scan. `detect_scan`
 passes other arguments on to `detect`, so `detect_scan(det, pages, profile="pages", profile_names=[...])` is the
 recommended call for a scan.
 
@@ -147,16 +147,22 @@ Measured with `python bench.py --spacy` on 2 CPU cores, one thread, shipped int8
 | Persons in German Wikipedia/news (GermEval 2014 test) | 96.2% | yes |
 | Persons in tweets (Broad Twitter Corpus test) | 83.2% | yes |
 | Persons in social-media text (WNUT 2017 test) | 85.3% | yes |
-| All PII in Microsoft Presidio sentences, templates unseen in training | 94.9% (94.1% of detections are real) | not for phones and postcodes |
+| All PII in Microsoft Presidio sentences, templates unseen in training | 96.4% (94.2% of detections are real) | not for phones and postcodes |
+| European phone numbers in 40 countries, 20 formats (1,000 synthetic test sentences) | 99.2% (no false phone hits) | yes |
 | All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 98.4% (93.1% of detections are real) | not for phones and postcodes |
 
 On the Presidio set: email, IBAN and IP 100%, person 100%, organisation 97%, credit card 97%, city/country 95%,
-street address 94%, phone 63%, postcode 33% (mostly multi-line addresses from countries the postcode rules do not cover).
+street address 94%, phone 88%, postcode 78%. v0.5 widened the phone and postcode rules after looking at Presidio
+misses (v0.4: phone 63%, postcode 33%), so these two figures are not clean. The European phone test is: the rules were
+tuned on its training split, and the 99.2% is from its held-out test split (v0.4: 89.0%).
 
 **On real scanned web pages** (`pages` profile, each scan processed with `detect_scan` and the scanned person's name):
 
 | | Persons found | Person detections correct | Companies found | Company detections correct |
 | --- | --- | --- | --- | --- |
+| **v0.5 (before its last two fixes)**, fresh test: 57 snippets from five scans, never tuned on | 99% | 85% | **67%** | 79% |
+| v0.4 on the same 57 snippets | 99% | 85% | 66% | 79% |
+| v0.5 as released, same 57 snippets (now used for tuning) | 97% | 89% | 74% | 76% |
 | **v0.4**, fresh test: 21 snippets from six scans, never tuned on | 100%* | 93% | 62% | **87%** |
 | v0.3 on the same 21 snippets | 100% | 96% | 62% | 62% |
 | v0.4 after a one-line fix seen in that test ("GUG" as a legal form) | 100%* | 93% | 67% | 88% |
@@ -164,6 +170,13 @@ street address 94%, phone 63%, postcode 33% (mostly multi-line addresses from co
 | v0.4, owner's scan (27 snippets, used for tuning) | 96% | 86% | 85% | 81% |
 
 \* One of 29 marked names was not found: a two-character mark that is most likely a labelling slip.
+
+**What v0.5 changed for companies:** little, measured honestly. A context rule ("worked at X", "bei X", "Agentur X")
+looked strong on the 21 snippets it was tuned on (86% found) but added one point on 57 new ones. The released version
+also shares a company name across a scan once the company check accepted it on two pages, and turns a one-word
+"person" such as "Porsche" or "Lufthansa" into a company when the lexicon mostly knows it as one. On the 57 snippets,
+now development data, that gives 74% found and 76% correct; a clean figure needs the next labelled batch. Most
+remaining misses are brands the tagger never proposes (a software tool, an agency name, small startups).
 
 **What v0.4 changed for companies:** far fewer false company flags. On the fresh test v0.3 flagged eight words that are
 not companies (a medical field, software tool names, a user name, an abbreviation and others); v0.4 flags two. It does
@@ -212,9 +225,8 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status for v0.4.0: **met for persons and for company detections that are correct; not for companies found.** On 21
-snippets nothing was tuned on, persons found is 100% (bar 95%) and 87% of company detections are correct (bar 85%), but
-only 62% of companies are found (bar 80%). Phones, postcodes and addresses are not hand-labelled on real pages yet.
+Status for v0.5.0: **met for persons found; not for companies.** On 57 snippets nothing was tuned on, persons found
+is 99% (bar 95%), but only 67% of companies are found (bar 80%) and 79% of company detections are correct (bar 85%). Phones, postcodes and addresses are not hand-labelled on real pages yet.
 Details are in [RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
 (`python bench.py --testset <file> --gate`).
 
@@ -226,10 +238,10 @@ grows in proportion to length. The HTTP API accepts up to 100,000 characters per
 
 ## Limits
 
-- **Companies without a legal form** are often missed on real pages (about 62% of companies found).
+- **Companies without a legal form** are often missed on real pages (about 67% of companies found on a clean test).
 - **Weaker on informal text.** On social-media text it finds about 83 to 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
 - **English and German only.**
-- **Weak spots:** nicknames and lower-case names in social-media text, phone numbers from countries outside the configured regions, postcodes in free text without an address around them.
+- **Weak spots:** nicknames and lower-case names in social-media text, phone numbers from countries outside the configured regions when no word like "Tel." or "contact" stands next to them, postcodes in free text without an address around them.
 - **More false alarms than v0.2,** by design: the thresholds trade precision for recall.
 - **It will miss things.** Treat it as a data-minimisation aid, not as a guarantee of anonymisation or of legal compliance.
 

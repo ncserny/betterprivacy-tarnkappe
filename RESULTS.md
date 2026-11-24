@@ -1,4 +1,4 @@
-# Results (v0.4.0)
+# Results (v0.5.0)
 
 Produced by `python bench.py --spacy` on 2 CPU cores, shipped int8 model + pattern layer, one thread.
 
@@ -9,39 +9,42 @@ How to read this:
 - **PII caught** counts an annotated item as found if any detection overlaps it. This is the number that matters for redaction.
 - Thresholds were tuned on development splits only. The EWT, GermEval, PUD, WNUT and BTC test numbers are clean.
 - The model was retrained with the Broad Twitter Corpus (training sections) and casing augmentation; its test section is held out.
-- The block below is v0.4.0: the v0.3 recipe plus page-like examples built from about 8,300 company names (see
+- The block below is v0.5.0 (same model files as v0.4.0, new rules): the v0.3 recipe plus page-like examples built from about 8,300 company names (see
   "v0.4: company detection"). It is run here with the default thresholds. Figures in the GLiNER
   comparison and in "First check on real scanned pages" further down were measured with the model before that retraining.
 - The phone and postcode rules were written after looking at misses on the Presidio set and on `eval/challenge_v1.txt`,
-  so those two are **not** clean evidence for phones and postcodes.
+  so those two are **not** clean evidence for phones and postcodes. v0.5 widened them again; see "v0.5: phones,
+  postcodes and a larger company test" for a clean phone test.
 - spaCy models were trained on other corpora with slightly different labelling rules; treat their scores as a reference point.
 
 ```
 == real annotated text: strict F1 on person / organisation / location, and on person alone ==
 ewt_test (English web text)
-   ours      all F1 0.656 (P 0.591 R 0.737)   person F1 0.774 (P 0.716 R 0.842)   1.22 ms/sentence
-   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   6.24 ms/sentence
-   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   4.22 ms/sentence
+   ours      all F1 0.656 (P 0.591 R 0.737)   person F1 0.774 (P 0.716 R 0.842)   1.36 ms/sentence
+/usr/local/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   4.29 ms/sentence
+   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   4.12 ms/sentence
 wnut17_test (social media)
-   ours      all F1 0.453 (P 0.381 R 0.557)   person F1 0.532 (P 0.440 R 0.671)   1.40 ms/sentence
-   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   2.99 ms/sentence
-   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   3.27 ms/sentence
+   ours      all F1 0.453 (P 0.381 R 0.557)   person F1 0.532 (P 0.440 R 0.671)   1.59 ms/sentence
+   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   3.61 ms/sentence
+   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   3.78 ms/sentence
 btc_test (tweets)
-   ours      all F1 0.606 (P 0.594 R 0.619)   person F1 0.736 (P 0.733 R 0.738)   1.52 ms/sentence
-   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   3.16 ms/sentence
-   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   3.43 ms/sentence
+   ours      all F1 0.606 (P 0.594 R 0.619)   person F1 0.736 (P 0.733 R 0.738)   1.75 ms/sentence
+   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   3.69 ms/sentence
+   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   3.97 ms/sentence
 germeval_test (German Wikipedia/news)
-   ours      all F1 0.690 (P 0.614 R 0.786)   person F1 0.768 (P 0.705 R 0.843)   1.60 ms/sentence
-   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   3.99 ms/sentence
-   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   4.06 ms/sentence
+   ours      all F1 0.690 (P 0.614 R 0.786)   person F1 0.768 (P 0.705 R 0.843)   1.61 ms/sentence
+   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   3.83 ms/sentence
+   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   4.23 ms/sentence
 pud_de (German news/Wikipedia)
-   ours      all F1 0.709 (P 0.651 R 0.777)   person F1 0.750 (P 0.709 R 0.797)   1.57 ms/sentence
+   ours      all F1 0.709 (P 0.651 R 0.777)   person F1 0.750 (P 0.709 R 0.797)   1.67 ms/sentence
    spaCy sm  all F1 0.642 (P 0.599 R 0.691)   person F1 0.713 (P 0.710 R 0.715)   3.78 ms/sentence
-   spaCy md  all F1 0.714 (P 0.675 R 0.757)   person F1 0.796 (P 0.795 R 0.797)   4.02 ms/sentence
+   spaCy md  all F1 0.714 (P 0.675 R 0.757)   person F1 0.796 (P 0.795 R 0.797)   4.03 ms/sentence
 
 == PII caught at all (any overlap, any label) ==
-   presidio (templates unseen in training)       recall 0.949  precision 0.941
-   our synthetic, new names + new phrasing       recall 0.981  precision 0.970
+   presidio (templates unseen in training)       recall 0.964  precision 0.942
+   our synthetic, new names + new phrasing       recall 0.987  precision 0.970
    ewt_test persons only                         recall 0.958
    germeval_test persons only                    recall 0.962
    wnut17_test persons only (social media)       recall 0.853
@@ -53,9 +56,9 @@ pud_de (German news/Wikipedia)
       presidio IP_ADDRESS      recall 1.000
       presidio ORGANIZATION    recall 0.970
       presidio PERSON          recall 0.998
-      presidio PHONE_NUMBER    recall 0.625
+      presidio PHONE_NUMBER    recall 0.875
       presidio STREET_ADDRESS  recall 0.942
-      presidio ZIP_CODE        recall 0.333
+      presidio ZIP_CODE        recall 0.778
 
 == release bar on challenge_v1.txt (87 records, 370 annotated items) ==
    PERSON        found  99.3% (133/134)   bar 95%   PASS
@@ -70,12 +73,12 @@ pud_de (German news/Wikipedia)
    all items found 98.4%;  by group: blog 100%, court-record 100%, data-broker 94%, de 99%, directory 98%, en 98%, forum 94%, news 100%, people-search 100%, search-engine 100%, social 100%
 
 == first / last name split (synthetic, new names + new phrasing) ==
-   F1 0.851 (P 0.859 R 0.842)
+   F1 0.850 (P 0.858 R 0.842)
 
 == latency, 1 CPU thread, 2000 texts, avg 17 tokens ==
-p50 1.41 ms   p95 2.78 ms   p99 3.33 ms
-throughput 652 texts/s, 10828 tokens/s per core
-long document (1068 tokens, 4759 chars): 73.5 ms
+p50 1.41 ms   p95 2.82 ms   p99 3.39 ms
+throughput 656 texts/s, 10890 tokens/s per core
+long document (1068 tokens, 4759 chars): 73.0 ms
 ```
 
 ## Comparison with GLiNER and GLiNER2-PII
@@ -268,6 +271,59 @@ Two changes were then made after looking at these errors (so the figures below a
 
 Company detections remain the weak point: on pages with few real companies most company hits are wrong. Persons, e-mail
 addresses, phone numbers and addresses are the reliable part of v0.3.0.
+
+## v0.5: phones, postcodes and a larger company test
+
+v0.5 keeps the v0.4 model files and changes rules only.
+
+**Phones.** The phone rule now accepts any 7 to 15 digit number, also with slashes, dots or brackets, when a phone
+word stands right before or after it: "Tel.", "call me on", "contact", "customer care", "hotline", "Tél.", "Telefono",
+"Teléfono", "reach the office at", "office", "mobile" and others. A digit string starting with 0 is no longer read as
+a credit card (no card number starts with 0), so "00355…" is a phone number again.
+
+Tested on 10,000 synthetic European phone sentences (40 countries, 20 formats, generated from libphonenumber metadata;
+not in this repository). The cue words were chosen on the 8,000 training sentences only:
+
+| Split | v0.4 | v0.5 | Text wrongly marked as a phone |
+| --- | --- | --- | --- |
+| test (1,000, never looked at) | 89.0% | 99.2% | 0 |
+| validation (1,000) | | 99.5% | 0 |
+
+The remaining misses are six-digit local numbers, which are left alone because too many other figures look the same.
+`scripts/eval_phone_csv.py` runs this test on any CSV with the same columns. On all hand-labelled real pages the
+phone and card detections are identical to v0.4.
+
+**Postcodes.** New formats: Portuguese 1234-567, three-digit numbers after a postcode word or inside an address block,
+a number on its own line in an address block, and "City 12345, DE"-style city-then-code. Years (1000–2099) are excluded.
+On Presidio, postcodes found rose from 33% to 78% and phones from 63% to 88%; these were tuned on Presidio, so they are
+not clean.
+
+**Companies.** Three changes:
+
+1. A context rule proposes names after "worked at", "joined", "Title @", "bei", "wechselt zu", "Gesellschafter des",
+   "Agentur" and similar; the company check accepts them with a lower bar.
+2. A company name accepted by the company check on two pages of one scan is matched on every page of that scan
+   (before: only names the tagger scored 0.9 or more on two pages).
+3. A one-word "person" with no title or first name in front becomes a company when the company lexicon mostly knows
+   the word as a company ("Porsche", "Lufthansa", "Siemens"); surnames such as "Müller" stay persons.
+
+The context rule was tuned on the 21 fresh snippets of v0.4, where it raised companies found from 62% to 86%. To see if
+that holds, 57 new snippets from five consenting people's scans were labelled by hand (persons and companies; 102
+companies), with predictions of both versions saved before labelling:
+
+| 57 new snippets | Persons found | Person detections correct | Companies found | Company detections correct |
+| --- | --- | --- | --- | --- |
+| v0.4 | 99% | 85% | 66% | 79% |
+| v0.5 with change 1 only (clean) | 99% | 85% | 67% | 79% |
+| v0.5 as released (changes 2 and 3 tuned on these snippets) | 97% | 89% | 74% | 76% |
+
+So the context rule does not carry over: the 86% was an effect of tuning on a small sample. Changes 2 and 3 add about
+seven points on the same snippets, which are no longer clean; the next labelled batch will tell. On all 159
+hand-labelled snippets together (all now development data), companies found is 69% and 78% of company detections are
+correct.
+
+What the remaining misses look like: brands the tagger never proposes (a software tool, a blogging platform, agency
+and consultancy names, small startup names in a list), and brand names that look like surnames, tagged as persons. A larger change to the tagger is needed to reach the 80% bar, planned for v0.6.
 
 ## v0.4: company detection
 
