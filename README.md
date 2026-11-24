@@ -6,7 +6,7 @@ Fast, small detection of personal data (PII) in English and German text, built f
 *Tarnkappe* is the cloak of invisibility from German legend. This library finds the personal
 data in a text so it can be flagged or hidden.
 
-- **Fast:** about 1.6 ms per short text on one CPU core. No GPU.
+- **Fast:** about 1.4 ms per short text on one CPU core. No GPU.
 - **Small:** 5 MB model plus 25 MB of word vectors. Three runtime dependencies (`numpy`, `onnxruntime`, `phonenumbers`).
 - **Private:** runs locally; text is processed in memory and never logged or stored.
 - **Open:** code, weights, training script and benchmark are all in this repository.
@@ -107,9 +107,9 @@ everywhere: alone in a headline, in capitals, or inside a domain name. It is not
 ```python
 from tarnkappe import Detector, detect_scan
 
-results = detect_scan(Detector(), page_texts, profile_companies=["compuccino"],
+results = detect_scan(Detector(), page_texts, profile_companies=["Nordwind Logistik"],
                       profile_names=["Jana Beispiel"])                            # one entity list per page
-Detector().detect(text, known_companies=["compuccino"])                           # or for a single text
+Detector().detect(text, known_companies=["Nordwind Logistik"])                          # or for a single text
 ```
 
 Company names the tagger is very sure about are shared in the same way, but only when they were found on two
@@ -127,7 +127,10 @@ No external database is involved. On the four other people's scans, sharing name
 2. **A 2.5M-parameter neural tagger** reads the text once and labels each word. It combines pretrained word
    vectors, hashed word embeddings and a character CNN, followed by a two-layer BiGRU. It is exported to ONNX and quantised to int8.
 3. **A rule** splits each detected person into first and last name, using titles ("Herr", "Dr."), name particles ("van der") and a first-name list.
-4. **A rule** marks "<Name> GmbH", "<Name> UG", "<Name> Ltd" and other legal forms as a company.
+4. **A rule** marks "<Name> GmbH", "<Name> UG", "<Name> Ltd", "<Name> SRL" and other legal forms as a company.
+5. **A second check on companies** (`profile="pages"` only): a small classifier looks at each company detection
+   with features the tagger weighs poorly (how often its words are part of company names elsewhere, how common they
+   are, capitalisation, the words around it, whether it is a whole short line) and drops the unlikely ones.
 
 The tagger reads line breaks, so menu entries, list rows and headings stay separate, and no detection runs across a line.
 Pattern and rule hits win over model hits where they overlap. Background and design choices are in [docs/RESEARCH.md](docs/RESEARCH.md).
@@ -141,47 +144,49 @@ Measured with `python bench.py --spacy` on 2 CPU cores, one thread, shipped int8
 | Test | Found | Clean test? |
 | --- | --- | --- |
 | Persons in English web text (UNER EWT test) | 95.8% | yes |
-| Persons in German Wikipedia/news (GermEval 2014 test) | 95.8% | yes |
-| Persons in tweets (Broad Twitter Corpus test) | 79.8% | yes |
-| Persons in social-media text (WNUT 2017 test) | 79.7% | yes |
-| All PII in Microsoft Presidio sentences, templates unseen in training | 96.1% (93.6% of detections are real) | not for phones and postcodes |
-| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 98.1% (91.1% of detections are real) | not for phones and postcodes |
+| Persons in German Wikipedia/news (GermEval 2014 test) | 96.2% | yes |
+| Persons in tweets (Broad Twitter Corpus test) | 83.2% | yes |
+| Persons in social-media text (WNUT 2017 test) | 85.3% | yes |
+| All PII in Microsoft Presidio sentences, templates unseen in training | 94.9% (94.1% of detections are real) | not for phones and postcodes |
+| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 98.4% (93.1% of detections are real) | not for phones and postcodes |
 
-On the Presidio set: email, IBAN and IP 100%, person 100%, street address 98%, credit card 97%, organisation 96%,
-city/country 94%, phone 75%, postcode 44% (mostly multi-line addresses from countries the postcode rules do not cover).
+On the Presidio set: email, IBAN and IP 100%, person 100%, organisation 97%, credit card 97%, city/country 95%,
+street address 94%, phone 63%, postcode 33% (mostly multi-line addresses from countries the postcode rules do not cover).
 
-**On real scanned web pages** (88 hand-labelled snippets from nine BetterPrivacy scans, `pages` profile, each scan
-processed with `detect_scan` and the scanned person's name):
+**On real scanned web pages** (`pages` profile, each scan processed with `detect_scan` and the scanned person's name):
 
 | | Persons found | Person detections correct | Companies found | Company detections correct |
 | --- | --- | --- | --- | --- |
-| Four more scans, clean (23 snippets, answers saved before labelling) | 100% | 93.0% | 92.3% | 34.3% |
-| same, after the fixes made on seeing them | 100% | 93.0% | 84.6% | 45.8% |
-| Four other people's scans (38 snippets, used for tuning) | 100% | 86.3% | 78.5% | 85.2% |
-| Owner's scan (27 snippets, used for tuning) | 96.4% | 91.7% | 83.7% | 77.6% |
+| **v0.4**, fresh test: 21 snippets from six scans, never tuned on | 100%* | 93% | 62% | **87%** |
+| v0.3 on the same 21 snippets | 100% | 96% | 62% | 62% |
+| v0.4 after a one-line fix seen in that test ("GUG" as a legal form) | 100%* | 93% | 67% | 88% |
+| v0.4, four other people's scans (38 snippets, used for tuning) | 100% | 87% | 67% | 81% |
+| v0.4, owner's scan (27 snippets, used for tuning) | 96% | 86% | 85% | 81% |
 
-**Persons are reliable; company flags are not yet.** On pages that mention few companies, most company hits are wrong
-(medical terms, product names, page text). GLiNER2-PII does no better on the clean set (28% of its company detections
-correct), at about 250 ms per snippet against 6 ms.
+\* One of 29 marked names was not found: a two-character mark that is most likely a labelling slip.
 
-The model was retrained for web pages, and that cost accuracy on tweets (persons found fell from 88% to 80%). Strict F1
-for persons is 0.75 to 0.77 on edited text and 0.53 on WNUT; the default thresholds favour recall over exact boundaries.
-Details: [RESULTS.md](RESULTS.md).
+**What v0.4 changed for companies:** far fewer false company flags. On the fresh test v0.3 flagged eight words that are
+not companies (a medical field, software tool names, a user name, an abbreviation and others); v0.4 flags two. It does
+not yet find more companies: well-known brand names written without a legal form are still often missed. 21 companies
+is a small sample, so read these as rough figures.
+
+Persons are found reliably on real pages. Strict F1 for persons is 0.75 to 0.77 on edited text and 0.53 on WNUT; the
+default thresholds favour recall over exact boundaries. Details: [RESULTS.md](RESULTS.md).
 
 ### Two threshold sets
 
 ```python
 det.detect(text)                     # default: find as much as possible, also in tweets and chat
-det.detect(text, profile="pages")    # web pages: far fewer menu words and product names flagged
+det.detect(text, profile="pages")    # web pages: fewer menu words and product names flagged, company check on
 ```
 
 Use `profile="pages"` for scanned web pages, together with `detect_scan`. Keep the default for chat and social-media
-text: with the `pages` profile only about 55 to 62% of persons in tweets are found.
+text: with the `pages` profile only about 57 to 60% of persons in tweets are found.
 
 | Speed and size | |
 | --- | --- |
-| Short text (16 tokens) | 1.6 ms median, 4.4 ms at p99 |
-| Throughput per core | about 550 texts per second |
+| Short text (16 tokens) | 1.4 ms median, 3.3 ms at p99 |
+| Throughput per core | about 650 texts per second |
 | Long pages | about 14,000 tokens per second: 44 ms for 650 tokens, 1.1 s for 15,000 tokens (66,000 characters) |
 | Memory, start-up | about 270 MB, 1 s |
 
@@ -207,11 +212,10 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status for v0.3.0: **met for persons, not for companies.** On 23 snippets from four scans nothing was tuned on, persons
-found is 100% (bar 95%) with 93% of person detections correct (bar 85%); companies found is 92% (bar 80%), but only 34%
-of company detections are correct (46% after the fixes in RESULTS.md; bar 85%). Use company flags as hints, not facts.
-Phones, postcodes and addresses are not hand-labelled on real pages yet. Details and a comparison with GLiNER are in
-[RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
+Status for v0.4.0: **met for persons and for company detections that are correct; not for companies found.** On 21
+snippets nothing was tuned on, persons found is 100% (bar 95%) and 87% of company detections are correct (bar 85%), but
+only 62% of companies are found (bar 80%). Phones, postcodes and addresses are not hand-labelled on real pages yet.
+Details are in [RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
 (`python bench.py --testset <file> --gate`).
 
 ## Long pages
@@ -222,7 +226,8 @@ grows in proportion to length. The HTTP API accepts up to 100,000 characters per
 
 ## Limits
 
-- **Weaker on informal text.** On social-media text it finds about 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
+- **Companies without a legal form** are often missed on real pages (about 62% of companies found).
+- **Weaker on informal text.** On social-media text it finds about 83 to 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
 - **English and German only.**
 - **Weak spots:** nicknames and lower-case names in social-media text, phone numbers from countries outside the configured regions, postcodes in free text without an address around them.
 - **More false alarms than v0.2,** by design: the thresholds trade precision for recall.
@@ -249,8 +254,15 @@ python scripts/wiki_snippets.py <de.parquet> data/wiki_de.txt && python scripts/
 cat data/wiki_de.txt data/wiki_en.txt > data/wiki_snippets.txt
 python scripts/distil_label.py data/wiki_snippets.txt data/wiki_gliner2.jsonl --teacher gliner2-plain --threshold 0.3
 python scripts/build_distilled.py data/wiki_gliner2.jsonl data/distilled_pages.jsonl
-python train.py --extra data/distilled_pages.jsonl
+python scripts/company_examples.py companies.csv data/company_pages.jsonl --split train --noise --n 10000
+python train.py --extra data/distilled_pages.jsonl data/company_pages.jsonl
+python scripts/build_org_lexicon.py && python scripts/train_orgcheck.py data/wiki2_gliner2.jsonl data/company_pages.jsonl
 ```
+
+`companies.csv` is a list of company names with a `company_name` column. v0.4 used a CC0 sample of about 10,000
+European and US companies from [CompanyData.com's public datasets](https://github.com/companydatacom/public-datasets)
+plus the constituents of the STOXX Europe 600 and the S&P 500 as listed on Wikipedia; a fifth of each list is held out
+for testing. `wiki2_gliner2.jsonl` is a second, smaller set of Wikipedia paragraphs labelled the same way as the first.
 
 `python bench.py --spacy` adds the spaCy baselines (needs `spacy` and its `sm`/`md` models for English and German).
 `tarnkappe/model/vectors.npz` is included; `scripts/export_vectors.py` rebuilds it from spaCy's medium models.
@@ -261,6 +273,7 @@ python train.py --extra data/distilled_pages.jsonl
 | --- | --- |
 | `tarnkappe/detect.py` | Runtime: patterns, ONNX model, name splitting, redaction |
 | `tarnkappe/scan.py` | Scan-level matching: share company names between the pages of one scan, and find the scanned person's own name |
+| `tarnkappe/orgcheck.py` | Second check on company detections (features + a small gradient-boosted classifier in ONNX) |
 | `tarnkappe/features.py` | Tokeniser, features, word vectors, tag conversion (numpy only) |
 | `tarnkappe/data.py` | Synthetic data generator; train and test names and templates are kept disjoint |
 | `tarnkappe/corpora.py` | Loaders for the public corpora |
@@ -274,6 +287,9 @@ python train.py --extra data/distilled_pages.jsonl
 | `scripts/prelabel.py` | Pre-labels raw pages for hand-checking |
 | `scripts/distil_label.py` | Labels text with a teacher model (spaCy, GLiNER, GLiNER2-PII) for distillation |
 | `scripts/compare_gliner.py` | Tarnkappe next to GLiNER and GLiNER2-PII on the same texts |
+| `scripts/company_examples.py` | Page-like training and held-out test examples from a list of company names |
+| `scripts/build_org_lexicon.py`, `scripts/train_orgcheck.py` | Word statistics and training for the company check |
+| `scripts/eval_company_test.py` | Scores a model on held-out company names |
 | `next/finetune_encoder.py` | Fine-tuning a pretrained transformer encoder. **Not run yet.** |
 
 ## Licence

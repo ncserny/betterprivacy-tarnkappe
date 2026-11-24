@@ -1,1 +1,7 @@
-{"pages": {"PERSON": 0.3, "ORG": 0.4}}
+{
+  "pages": {
+    "PERSON": 0.3,
+    "ORG": 0.4,
+    "org_check": 0.4
+  }
+}

@@ -3,7 +3,7 @@
   "ORG": 0.1,
   "LOCATION": 0.15,
   "STREET": 0.05,
-  "ZIP": 0.25,
-  "EMAIL": 0.6,
-  "PHONE": 0.05
+  "ZIP": 0.6,
+  "EMAIL": 0.45,
+  "PHONE": 0.15
 }
