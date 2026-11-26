@@ -57,6 +57,20 @@ def brand_not_person(text, s, lex):
     return not TITLE_BEFORE.search(before) and not re.search(r"[A-ZÄÖÜ][a-zäöüß]+[ \t]+$", before)
 
 
+EMPLOYER_BEFORE = re.compile(
+    r"(?i)(?:\b(?:director|manager|head|engineer|developer|officer|founder|co-founder|partner|ceo|cto|cfo|coo|vp|president|"
+    r"consultant|advisor|adviser|lead|analyst|designer|intern|architect|scientist|strategist|"
+    r"geschäftsführer\w*|leiter\w*|berater\w*|mitarbeiter\w*|entwickler\w*|gründer\w*|vorstand\w*|partnerin)"
+    r"(?:[ \t]+(?:of|for|für)[ \t]+[\w&\- ]{1,40})?"
+    r"|\b(?:work|works|working|worked|employed|job|stint|internship|career|years))[ \t]+(?:at|bei|@)[ \t]+$")
+
+
+def employer_slot(text, s):
+    """'Director of Digital Strategy at AJ Bell', 'worked at Lufthansa': the name after a job title and 'at' is an
+    employer, even when it looks like a person's name. 'Speaking at' or 'met at' do not count."""
+    return bool(EMPLOYER_BEFORE.search(text[max(0, s["start"] - 80):s["start"]]))
+
+
 # ---- postcodes -------------------------------------------------------------------------
 # Formats that are distinctive enough to accept on sight.
 ZIP_SURE = re.compile(
@@ -350,7 +364,7 @@ class Detector:
                  and not (s["type"] == "ORG" and not_a_company(text, s))]
         if self.org_cut(profile) is not None:              # "Porsche", "Lufthansa": a lone surname-like word that
             for s in model:                                 # mostly names a company is one
-                if s["type"] == "PERSON" and brand_not_person(text, s, self.orgcheck.lex):
+                if s["type"] == "PERSON" and (brand_not_person(text, s, self.orgcheck.lex) or employer_slot(text, s)):
                     s["type"] = "ORG"
         # "<Name> GmbH" is a company by rule, unless the tagger already has a longer company span around it
         rules = [r for r in legal_form_spans(text)

@@ -1,181 +1,181 @@
 {
   "ewt_test (English web text)": {
     "PERSON": {
-      "precision": 0.8194,
-      "recall": 0.8285,
-      "f1": 0.8239,
+      "precision": 0.7888,
+      "recall": 0.7817,
+      "f1": 0.7852,
       "support": 449
     },
     "ORG": {
-      "precision": 0.5932,
-      "recall": 0.4348,
-      "f1": 0.5018,
+      "precision": 0.6245,
+      "recall": 0.4596,
+      "f1": 0.5295,
       "support": 322
     },
     "LOCATION": {
-      "precision": 0.7446,
+      "precision": 0.7539,
       "recall": 0.7634,
-      "f1": 0.7539,
+      "f1": 0.7586,
       "support": 317
     },
     "micro": {
-      "precision": 0.7429,
-      "recall": 0.693,
-      "f1": 0.7171,
+      "precision": 0.7388,
+      "recall": 0.6811,
+      "f1": 0.7088,
       "support": 1088
     }
   },
   "germeval_test (German Wikipedia/news)": {
     "PERSON": {
-      "precision": 0.8397,
-      "recall": 0.8084,
-      "f1": 0.8237,
+      "precision": 0.8393,
+      "recall": 0.8096,
+      "f1": 0.8242,
       "support": 1639
     },
     "ORG": {
-      "precision": 0.6595,
-      "recall": 0.5609,
-      "f1": 0.6062,
+      "precision": 0.6765,
+      "recall": 0.5583,
+      "f1": 0.6117,
       "support": 1150
     },
     "LOCATION": {
-      "precision": 0.7765,
-      "recall": 0.7737,
-      "f1": 0.7751,
+      "precision": 0.7882,
+      "recall": 0.7614,
+      "f1": 0.7746,
       "support": 1706
     },
     "micro": {
-      "precision": 0.773,
-      "recall": 0.7319,
-      "f1": 0.7519,
+      "precision": 0.7822,
+      "recall": 0.727,
+      "f1": 0.7536,
       "support": 4495
     }
   },
   "pud_de (German news/Wikipedia)": {
     "PERSON": {
-      "precision": 0.7759,
-      "recall": 0.7703,
-      "f1": 0.7731,
+      "precision": 0.7868,
+      "recall": 0.7679,
+      "f1": 0.7772,
       "support": 418
     },
     "ORG": {
-      "precision": 0.6923,
-      "recall": 0.4688,
-      "f1": 0.559,
+      "precision": 0.6825,
+      "recall": 0.4479,
+      "f1": 0.5409,
       "support": 192
     },
     "LOCATION": {
-      "precision": 0.755,
-      "recall": 0.7972,
-      "f1": 0.7755,
+      "precision": 0.7523,
+      "recall": 0.7786,
+      "f1": 0.7652,
       "support": 429
     },
     "micro": {
-      "precision": 0.7555,
-      "recall": 0.7257,
-      "f1": 0.7403,
+      "precision": 0.7577,
+      "recall": 0.7132,
+      "f1": 0.7348,
       "support": 1039
     }
   },
   "wnut17_test (social media)": {
     "PERSON": {
-      "precision": 0.6424,
-      "recall": 0.4732,
-      "f1": 0.545,
+      "precision": 0.6302,
+      "recall": 0.4569,
+      "f1": 0.5297,
       "support": 429
     },
     "ORG": {
-      "precision": 0.4593,
-      "recall": 0.2684,
-      "f1": 0.3388,
+      "precision": 0.461,
+      "recall": 0.2814,
+      "f1": 0.3495,
       "support": 231
     },
     "LOCATION": {
-      "precision": 0.5769,
+      "precision": 0.6048,
       "recall": 0.5,
-      "f1": 0.5357,
+      "f1": 0.5474,
       "support": 150
     },
     "micro": {
-      "precision": 0.5852,
-      "recall": 0.4198,
-      "f1": 0.4889,
+      "precision": 0.5833,
+      "recall": 0.4148,
+      "f1": 0.4848,
       "support": 810
     }
   },
   "btc_test (tweets)": {
     "PERSON": {
-      "precision": 0.7926,
-      "recall": 0.4151,
-      "f1": 0.5449,
+      "precision": 0.7684,
+      "recall": 0.3645,
+      "f1": 0.4945,
       "support": 1602
     },
     "ORG": {
-      "precision": 0.4988,
-      "recall": 0.2715,
-      "f1": 0.3516,
+      "precision": 0.5341,
+      "recall": 0.3068,
+      "f1": 0.3897,
       "support": 792
     },
     "LOCATION": {
-      "precision": 0.6355,
-      "recall": 0.5299,
-      "f1": 0.5779,
+      "precision": 0.7056,
+      "recall": 0.5216,
+      "f1": 0.5998,
       "support": 602
     },
     "micro": {
-      "precision": 0.6766,
-      "recall": 0.4002,
-      "f1": 0.5029,
+      "precision": 0.6873,
+      "recall": 0.3808,
+      "f1": 0.4901,
       "support": 2996
     }
   },
   "synthetic_new_phrasing (PII templates)": {
     "PERSON": {
-      "precision": 0.9134,
-      "recall": 0.8958,
-      "f1": 0.9045,
+      "precision": 0.9282,
+      "recall": 0.9282,
+      "f1": 0.9282,
       "support": 1602
     },
     "ORG": {
-      "precision": 0.8901,
-      "recall": 0.8653,
-      "f1": 0.8775,
+      "precision": 0.8955,
+      "recall": 0.8493,
+      "f1": 0.8718,
       "support": 1937
     },
     "LOCATION": {
-      "precision": 0.8902,
-      "recall": 0.8859,
-      "f1": 0.8881,
+      "precision": 0.8611,
+      "recall": 0.9478,
+      "f1": 0.9024,
       "support": 824
     },
     "STREET": {
-      "precision": 0.9181,
-      "recall": 0.9428,
-      "f1": 0.9303,
+      "precision": 0.9383,
+      "recall": 0.9249,
+      "f1": 0.9315,
       "support": 559
     },
     "ZIP": {
-      "precision": 0.9818,
-      "recall": 0.9963,
-      "f1": 0.989,
+      "precision": 0.9853,
+      "recall": 0.9926,
+      "f1": 0.9889,
       "support": 270
     },
     "EMAIL": {
-      "precision": 0.9612,
-      "recall": 0.9688,
-      "f1": 0.965,
+      "precision": 0.9421,
+      "recall": 0.9531,
+      "f1": 0.9476,
       "support": 256
     },
     "PHONE": {
-      "precision": 0.9167,
-      "recall": 0.8988,
-      "f1": 0.9076,
+      "precision": 0.9213,
+      "recall": 0.8739,
+      "f1": 0.897,
       "support": 563
     },
     "micro": {
-      "precision": 0.9088,
-      "recall": 0.8969,
-      "f1": 0.9028,
+      "precision": 0.9114,
+      "recall": 0.904,
+      "f1": 0.9077,
       "support": 6011
     }
   }
