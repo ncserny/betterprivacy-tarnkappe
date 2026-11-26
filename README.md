@@ -161,6 +161,11 @@ tuned on its training split, and the 99.2% is from its held-out test split (v0.4
 
 | | Persons found | Person detections correct | Organisations found | Organisation detections correct |
 | --- | --- | --- | --- | --- |
+| **v0.7**, fresh test: 18 snippets, never tuned on (48 organisations, 17 persons) | 100% | 100% | **71%** | **97%** |
+| v0.6 on the same 18 snippets | 100% | 100% | 56% | 96% |
+| v0.7 with a fix found on that test, same 18 snippets | 100% | 100% | 77% | 97% |
+| v0.7 on all 203 labelled snippets (mostly used for tuning) | 99% | 91% | 82% | 88% |
+| v0.6 on the same 203 snippets | 99% | 90% | 73% | 88% |
 | **v0.6**, fresh test: 26 snippets from seven scans, never tuned on (38 organisations, 5 persons) | 4 of 5 | 4 of 8 | **68%** | **90%** |
 | v0.5 on the same 26 snippets | 4 of 5 | 4 of 8 | 63% | 80% |
 | v0.6 on all 159 earlier snippets (used for tuning) | 99.5% | 91% | 77% | 86% |
@@ -178,6 +183,14 @@ tuned on its training split, and the 99.2% is from its held-out test split (v0.4
 
 Since v0.6 "organisation" means anything a person can work for or belong to: companies, public bodies, media,
 universities, clubs, parties and associations, but not products or apps (see [eval/README.md](eval/README.md)).
+
+**What v0.7 changed:** rules only, same model as v0.6. A list of about 250 well-known organisations
+(`tarnkappe/model/institutions.txt`: parties, broadcasters, newspapers, public bodies, chambers, associations, and
+companies whose name is also the platform's) is matched case-sensitively in the `pages` profile; ambiguous names count
+only next to another organisation. A lone lower-case or all-capitals word the tagger took for a person becomes a
+company candidate. A name shared across a scan from a legal form ("Example GmbH") is no longer dropped where the
+tagger found the same name itself (a bug since v0.4). Political news is over-represented in the 18-snippet test and
+the list covers it well, so 71% is likely on the high side for other pages.
 
 **What v0.6 changed:** a retrained tagger. It learned from 5,500 more Wikipedia paragraphs about companies (3,500 of
 them German) and 12,000 generated sentences where organisation names without a legal form stand where persons
@@ -241,9 +254,9 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status for v0.6.0: **met for organisation detections that are correct; not for organisations found.** On 26 snippets
-nothing was tuned on, 90% of organisation detections are correct (bar 85%) but only 68% of organisations are found
-(bar 80%). Persons found was 99% on the 57-snippet clean test of v0.5 (bar 95%); the v0.6 test has too few persons to say. Phones, postcodes and addresses are not hand-labelled on real pages yet.
+Status for v0.7.0: **met for organisation detections that are correct; not for organisations found.** On 18 snippets
+nothing was tuned on, 97% of organisation detections are correct (bar 85%) but 71% of organisations are found
+(bar 80%); across all 203 labelled snippets, most of them used for tuning, 82% are found. Persons found was 99% on the 57-snippet clean test of v0.5 (bar 95%); the v0.6 test has too few persons to say. Phones, postcodes and addresses are not hand-labelled on real pages yet.
 Details are in [RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
 (`python bench.py --testset <file> --gate`).
 
@@ -255,7 +268,7 @@ grows in proportion to length. The HTTP API accepts up to 100,000 characters per
 
 ## Limits
 
-- **Organisations without a legal form** are often missed on real pages (about 68% found on a clean test). Domain-style names ("example.fm") and platform names are missed most.
+- **Organisations without a legal form** are often missed on real pages (about 71% found on a clean test). Domain-style names ("example.fm") and platform names are missed most.
 - **Weaker on informal text.** On social-media text it finds about 83 to 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
 - **English and German only.**
 - **Weak spots:** nicknames and lower-case names in social-media text, phone numbers from countries outside the configured regions when no word like "Tel." or "contact" stands next to them, postcodes in free text without an address around them.
