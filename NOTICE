@@ -23,6 +23,9 @@ The model weights were trained on the following data:
   https://dumps.wikimedia.org/  https://huggingface.co/datasets/wikimedia/wikipedia
   Text by Wikipedia contributors. The entity labels on these paragraphs were produced by the model
   fastino/gliner2-privacy-filter-PII-multi (Apache License 2.0), https://huggingface.co/fastino/gliner2-privacy-filter-PII-multi
+- From v0.6: 4,700 more German and English Wikipedia paragraphs about companies from the same dump, labelled the same way,
+  and 800 excerpts from 219 English Wikipedia articles about companies (text CC BY-SA 4.0, by Wikipedia contributors;
+  source URLs and revision links are kept with the excerpt file, which is not part of this repository).
 - Company names from the CompanyData.com public dataset samples, CC0 1.0
   https://github.com/companydatacom/public-datasets
 - Names of the STOXX Europe 600 and S&P 500 constituents as listed on Wikipedia

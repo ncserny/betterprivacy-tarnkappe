@@ -39,3 +39,19 @@ Use it as a regression test, not as proof of quality:
 
 Pre-labelling biases the checker towards the model's view, so read every line and look for what is missing.
 Files named `eval/real_*.txt` are ignored by git because they contain real personal data. Keep them in the EU and off public systems.
+
+## What counts as an organisation
+
+From v0.6 on, training data and hand labels follow one rule: **an organisation is anything a person can work for or
+be a member of**, because that is what a mention reveals about a person ("works at X", "studied at Y").
+
+| Counts | Does not count |
+| --- | --- |
+| Companies, startups, agencies, shops, practices | Products, apps, software and platforms (a CMS, a messenger app, a blog platform) |
+| Public bodies and authorities (a central bank, a ministry, the armed forces) | Events and conferences |
+| Media outlets (broadcasters, newspapers, magazines) | Buildings and places named after an organisation |
+| Universities, schools, research institutes | |
+| Clubs, associations, parties, foundations | |
+
+A product name counts when it is also the name of the company behind it ("Google", "Facebook"). When a product name
+contains the company name ("Acme Editor"), mark the company part only.

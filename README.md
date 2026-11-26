@@ -6,7 +6,7 @@ Fast, small detection of personal data (PII) in English and German text, built f
 *Tarnkappe* is the cloak of invisibility from German legend. This library finds the personal
 data in a text so it can be flagged or hidden.
 
-- **Fast:** about 1.4 ms per short text on one CPU core. No GPU.
+- **Fast:** about 1.5 ms per short text on one CPU core. No GPU.
 - **Small:** 5 MB model plus 25 MB of word vectors. Three runtime dependencies (`numpy`, `onnxruntime`, `phonenumbers`).
 - **Private:** runs locally; text is processed in memory and never logged or stored.
 - **Open:** code, weights, training script and benchmark are all in this repository.
@@ -143,13 +143,14 @@ Measured with `python bench.py --spacy` on 2 CPU cores, one thread, shipped int8
 
 | Test | Found | Clean test? |
 | --- | --- | --- |
-| Persons in English web text (UNER EWT test) | 95.8% | yes |
-| Persons in German Wikipedia/news (GermEval 2014 test) | 96.2% | yes |
-| Persons in tweets (Broad Twitter Corpus test) | 83.2% | yes |
-| Persons in social-media text (WNUT 2017 test) | 85.3% | yes |
-| All PII in Microsoft Presidio sentences, templates unseen in training | 96.4% (94.2% of detections are real) | not for phones and postcodes |
+| Persons in English web text (UNER EWT test) | 96.2% | yes |
+| Persons in German Wikipedia/news (GermEval 2014 test) | 96.5% | yes |
+| Persons in tweets (Broad Twitter Corpus test) | 82.2% | yes |
+| Persons in social-media text (WNUT 2017 test) | 83.9% | yes |
+| All PII in Microsoft Presidio sentences, templates unseen in training | 97.5% (96.3% of detections are real) | not for phones and postcodes |
+| Companies in English Wikipedia articles about companies (109, companies never seen in training) | 82.6% | yes |
 | European phone numbers in 40 countries, 20 formats (1,000 synthetic test sentences) | 99.2% (no false phone hits) | yes |
-| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 98.4% (93.1% of detections are real) | not for phones and postcodes |
+| All PII in the hand-written challenge set (`eval/challenge_v1.txt`) | 98.6% (90.8% of detections are real) | not for phones and postcodes |
 
 On the Presidio set: email, IBAN and IP 100%, person 100%, organisation 97%, credit card 97%, city/country 95%,
 street address 94%, phone 88%, postcode 78%. v0.5 widened the phone and postcode rules after looking at Presidio
@@ -158,8 +159,12 @@ tuned on its training split, and the 99.2% is from its held-out test split (v0.4
 
 **On real scanned web pages** (`pages` profile, each scan processed with `detect_scan` and the scanned person's name):
 
-| | Persons found | Person detections correct | Companies found | Company detections correct |
+| | Persons found | Person detections correct | Organisations found | Organisation detections correct |
 | --- | --- | --- | --- | --- |
+| **v0.6**, fresh test: 26 snippets from seven scans, never tuned on (38 organisations, 5 persons) | 4 of 5 | 4 of 8 | **68%** | **90%** |
+| v0.5 on the same 26 snippets | 4 of 5 | 4 of 8 | 63% | 80% |
+| v0.6 on all 159 earlier snippets (used for tuning) | 99.5% | 91% | 77% | 86% |
+| v0.5 on the same 159 snippets | 98% | 91% | 71% | 82% |
 | **v0.5 (before its last two fixes)**, fresh test: 57 snippets from five scans, never tuned on | 99% | 85% | **67%** | 79% |
 | v0.4 on the same 57 snippets | 99% | 85% | 66% | 79% |
 | v0.5 as released, same 57 snippets (now used for tuning) | 97% | 89% | 74% | 76% |
@@ -170,6 +175,17 @@ tuned on its training split, and the 99.2% is from its held-out test split (v0.4
 | v0.4, owner's scan (27 snippets, used for tuning) | 96% | 86% | 85% | 81% |
 
 \* One of 29 marked names was not found: a two-character mark that is most likely a labelling slip.
+
+Since v0.6 "organisation" means anything a person can work for or belong to: companies, public bodies, media,
+universities, clubs, parties and associations, but not products or apps (see [eval/README.md](eval/README.md)).
+
+**What v0.6 changed:** a retrained tagger. It learned from 5,500 more Wikipedia paragraphs about companies (3,500 of
+them German) and 12,000 generated sentences where organisation names without a legal form stand where persons
+usually stand ("X steigt bei Y ein", "said X, chief executive of Y", "Name, Firma, Stadt" lists). A name after a
+job title and "at"/"bei" ("Director of Digital Strategy at …") is now read as the employer. On the clean 26-snippet
+test, organisations found rose from 63% to 68% and correct detections from 80% to 90%; on 109 unseen Wikipedia
+companies from 70.6% to 82.6%. The 26 snippets hold only 38 organisations and 5 persons, so the persons columns say
+little; v0.6 marks some product names (a sofa model, a CI service) as persons there.
 
 **What v0.5 changed for companies:** little, measured honestly. A context rule ("worked at X", "bei X", "Agentur X")
 looked strong on the 21 snippets it was tuned on (86% found) but added one point on 57 new ones. The released version
@@ -198,8 +214,8 @@ text: with the `pages` profile only about 57 to 60% of persons in tweets are fou
 
 | Speed and size | |
 | --- | --- |
-| Short text (16 tokens) | 1.4 ms median, 3.3 ms at p99 |
-| Throughput per core | about 650 texts per second |
+| Short text (16 tokens) | 1.5 ms median, 4.1 ms at p99 |
+| Throughput per core | about 600 texts per second |
 | Long pages | about 14,000 tokens per second: 44 ms for 650 tokens, 1.1 s for 15,000 tokens (66,000 characters) |
 | Memory, start-up | about 270 MB, 1 s |
 
@@ -225,8 +241,9 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status for v0.5.0: **met for persons found; not for companies.** On 57 snippets nothing was tuned on, persons found
-is 99% (bar 95%), but only 67% of companies are found (bar 80%) and 79% of company detections are correct (bar 85%). Phones, postcodes and addresses are not hand-labelled on real pages yet.
+Status for v0.6.0: **met for organisation detections that are correct; not for organisations found.** On 26 snippets
+nothing was tuned on, 90% of organisation detections are correct (bar 85%) but only 68% of organisations are found
+(bar 80%). Persons found was 99% on the 57-snippet clean test of v0.5 (bar 95%); the v0.6 test has too few persons to say. Phones, postcodes and addresses are not hand-labelled on real pages yet.
 Details are in [RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
 (`python bench.py --testset <file> --gate`).
 
@@ -238,7 +255,7 @@ grows in proportion to length. The HTTP API accepts up to 100,000 characters per
 
 ## Limits
 
-- **Companies without a legal form** are often missed on real pages (about 67% of companies found on a clean test).
+- **Organisations without a legal form** are often missed on real pages (about 68% found on a clean test). Domain-style names ("example.fm") and platform names are missed most.
 - **Weaker on informal text.** On social-media text it finds about 83 to 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
 - **English and German only.**
 - **Weak spots:** nicknames and lower-case names in social-media text, phone numbers from countries outside the configured regions when no word like "Tel." or "contact" stands next to them, postcodes in free text without an address around them.
@@ -268,6 +285,11 @@ python scripts/distil_label.py data/wiki_snippets.txt data/wiki_gliner2.jsonl --
 python scripts/build_distilled.py data/wiki_gliner2.jsonl data/distilled_pages.jsonl
 python scripts/company_examples.py companies.csv data/company_pages.jsonl --split train --noise --n 10000
 python train.py --extra data/distilled_pages.jsonl data/company_pages.jsonl
+# v0.6 adds company paragraphs and brand sentences:
+python scripts/distil_label.py data/wiki6_all_snippets.txt data/wiki6_gliner2.jsonl --teacher gliner2-plain --threshold 0.3
+python scripts/build_distilled.py data/wiki6_gliner2.jsonl data/distilled6.jsonl --lists 2000
+python scripts/brand_examples.py companies.csv data/brand_pages.jsonl --names company_names.txt --n 12000
+python train.py --extra data/distilled_pages.jsonl data/company_pages4.jsonl data/distilled6.jsonl data/brand_pages.jsonl
 python scripts/build_org_lexicon.py && python scripts/train_orgcheck.py data/wiki2_gliner2.jsonl data/company_pages.jsonl
 ```
 
@@ -300,6 +322,8 @@ for testing. `wiki2_gliner2.jsonl` is a second, smaller set of Wikipedia paragra
 | `scripts/distil_label.py` | Labels text with a teacher model (spaCy, GLiNER, GLiNER2-PII) for distillation |
 | `scripts/compare_gliner.py` | Tarnkappe next to GLiNER and GLiNER2-PII on the same texts |
 | `scripts/company_examples.py` | Page-like training and held-out test examples from a list of company names |
+| `scripts/brand_examples.py` | v0.6 sentences with organisation names without a legal form in running text |
+| `scripts/eval_wikico.py`, `scripts/eval_phone_csv.py` | Recall on Wikipedia company excerpts and on a phone-number CSV (data not in the repository) |
 | `scripts/build_org_lexicon.py`, `scripts/train_orgcheck.py` | Word statistics and training for the company check |
 | `scripts/eval_company_test.py` | Scores a model on held-out company names |
 | `next/finetune_encoder.py` | Fine-tuning a pretrained transformer encoder. **Not run yet.** |

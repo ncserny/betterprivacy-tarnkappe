@@ -1,4 +1,4 @@
-# Tarnkappe PII tagger v0.3 development (model card)
+# Tarnkappe PII tagger v0.6 (model card)
 
 A 2.5M-parameter token tagger for personal data in English and German text.
 Labels: PERSON, ORG, LOCATION, STREET, ZIP, EMAIL, PHONE. The runtime (`tarnkappe/detect.py`)
@@ -30,6 +30,8 @@ If you publish a modified version of the weights, it must carry the same licence
 | [WNUT 2017](https://github.com/leondz/emerging_entities_17), train split | 3,395 social-media sentences | CC BY 4.0 |
 | [Broad Twitter Corpus](https://github.com/GateNLP/broad_twitter_corpus), sections a, b, e, g | 6,192 tweets; its @handle labels are not used | CC BY 4.0 |
 | [Wikipedia](https://huggingface.co/datasets/wikimedia/wikipedia) (German and English, dump of 1 November 2023), labelled by [GLiNER2-PII](https://huggingface.co/fastino/gliner2-privacy-filter-PII-multi) | 11,000 paragraphs, half of them wrapped in menu and footer lines, plus 3,000 list-shaped examples built from their names | text CC BY-SA 4.0; teacher model Apache 2.0 |
+| v0.6: more Wikipedia paragraphs about companies (3,500 German, 1,200 English) and 800 excerpts from 219 English Wikipedia company articles, labelled the same way (the article's own company always marked) | 5,500 paragraphs plus 2,000 list-shaped examples | text CC BY-SA 4.0 |
+| v0.6: sentences built by `scripts/brand_examples.py`: organisation names without a legal form in news, profile and list sentences (company names from the CompanyData.com CC0 samples and the Wikipedia articles above, invented surname-like and lower-case startup names, broadcasters, universities, clubs) | 12,000 examples | generated |
 | Page-like examples with company names: a CC0 sample of European and US companies from [CompanyData.com](https://github.com/companydatacom/public-datasets) and the STOXX Europe 600 and S&P 500 constituents (names only) | 10,000 examples, about 8,300 names (a fifth of each list held out) | CC0 1.0; names only |
 | Generated sentences (`tarnkappe/data.py`) | 25,000, English and German | ours |
 | [Presidio Research](https://github.com/microsoft/presidio-research) templates (even-numbered), rendered with our values | 8,000 | MIT |
