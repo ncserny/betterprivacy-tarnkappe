@@ -53,5 +53,8 @@ be a member of**, because that is what a mention reveals about a person ("works 
 | Universities, schools, research institutes | |
 | Clubs, associations, parties, foundations | |
 
-A product name counts when it is also the name of the company behind it ("Google", "Facebook"). When a product name
-contains the company name ("Acme Editor"), mark the company part only.
+A product name counts when it is also the name of the company behind it ("Google", "Facebook"), also where the text
+uses it as a place ("auf Facebook"). When a product name contains the company name ("Acme Editor"), mark the company
+part only. An organisation inside a compound word counts and is marked on its own: "SPD" in "SPD-Mitglied",
+"Grünen" in "Grünen-Anhänger". A web address in a link line ("http://www.example.com") is not marked; a domain-style
+name used as the company's name ("example.fm lets you publish …") is.

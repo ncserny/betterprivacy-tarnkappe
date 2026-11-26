@@ -15,6 +15,7 @@ The scanned person's own name is known before any page is read. Passing it as pr
 makes sure it is found everywhere: alone in a headline ("Beispiel verstärkt ..."), in capitals,
 or inside a domain name ("beispiel.berlin").
 """
+import os
 import re
 
 LEGAL = (r"(?:GmbH\s*&\s*Co\.?\s*KGaA|GmbH\s*&\s*Co\.?\s*KG|gGmbH|GmbH|GMBH|mbH|gUG|UG\s*\(haftungsbeschränkt\)|UG|GUG|AG|KGaA|KG|OHG|SE|"
@@ -209,7 +210,51 @@ def person_spans(text, names, split_names=True):
 PERSON_TYPES = {"PERSON", "FIRST_NAME", "LAST_NAME"}
 
 
-def apply_known(text, entities, names, person_names=(), split_names=True):
+_INST = None
+
+
+def institutions():
+    """(name, ambiguous) pairs from model/institutions.txt, longest first."""
+    global _INST
+    if _INST is None:
+        path = os.path.join(os.path.dirname(__file__), "model", "institutions.txt")
+        out = []
+        if os.path.exists(path):
+            for line in open(path, encoding="utf-8"):
+                line = line.rstrip("\n")
+                if not line.strip() or line.startswith("#"):
+                    continue
+                amb = line.endswith(" ~")
+                out.append((line[:-2] if amb else line, amb))
+        _INST = sorted(out, key=lambda x: -len(x[0]))
+    return _INST
+
+
+def institution_spans(text, entities=()):
+    """Mentions of well-known organisations from model/institutions.txt: case-sensitive, whole words, a genitive
+    "s" or a hyphenated compound ("SPD-Fraktion") allowed. Ambiguous names ("Grüne") only count when another
+    organisation is in the same sentence."""
+    hits = []
+    for name, amb in institutions():
+        pat = re.compile(r"(?<![\w@/.])" + re.escape(name) + r"(?=s?(?![\w]))")
+        for m in pat.finditer(text):
+            if all(m.end() <= a or m.start() >= b for a, b, _ in hits):
+                hits.append((m.start(), m.end(), amb))
+    orgs = [(e["start"], e["end"]) for e in entities if e["type"] == "ORGANIZATION"] + \
+           [(a, b) for a, b, amb in hits if not amb]
+    out = []
+    for a, b, amb in sorted(hits):
+        if amb:
+            lo = max(text.rfind(c, 0, a) for c in ".!?\n") + 1
+            his = [x for x in (text.find(c, b) for c in ".!?\n") if x >= 0]
+            hi = min(his) if his else len(text)
+            if not any(lo <= x < hi and not (x == a and y == b) for x, y in orgs):
+                continue
+        out.append({"type": "ORGANIZATION", "start": a, "end": b, "score": 1.0, "source": "list", "text": text[a:b]})
+    return out
+
+
+def apply_known(text, entities, names, person_names=(), split_names=True, extra=()):
     """Add list matches to one page's detections. A list match replaces model detections it
     overlaps, except e-mail addresses, IBANs and other pattern hits."""
     if person_names:
@@ -223,7 +268,9 @@ def apply_known(text, entities, names, person_names=(), split_names=True):
                 people = [x for x in people if x not in clash]      # pattern hits and the model's own person spans win
                 keep.append(e)
         entities = sorted(keep + people, key=lambda e: e["start"])
-    extra = company_spans(text, names)
+    extra = sorted(list(extra) + [x for x in company_spans(text, names)
+                                  if all(x["end"] <= y["start"] or x["start"] >= y["end"] for y in extra)],
+                   key=lambda x: x["start"])
     keep = []
     for e in entities:
         clash = [x for x in extra if x["start"] < e["end"] and x["end"] > e["start"]]
@@ -232,7 +279,8 @@ def apply_known(text, entities, names, person_names=(), split_names=True):
             keep.append(e)
         elif not clash:
             keep.append(e)
-        elif e["type"] == "ORGANIZATION" and any(e["start"] <= x["start"] and e["end"] >= x["end"] for x in clash):
+        elif e["type"] == "ORGANIZATION" and any(e["start"] <= x["start"] and e["end"] >= x["end"] for x in clash) \
+                and not any(e["start"] == x["start"] and e["end"] == x["end"] for x in clash):
             extra = [x for x in extra if x not in clash]        # the model already has the longer company span
             keep.append(e)
     return sorted(keep + extra, key=lambda e: e["start"])

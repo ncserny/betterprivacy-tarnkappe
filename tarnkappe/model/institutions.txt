@@ -1,0 +1,255 @@
+# Well-known organisations that the tagger often misses because they carry no legal form.
+# One name per line, matched case-sensitively as a whole word (a genitive "s" is allowed).
+# A line ending in " ~" is ambiguous on its own: it is only matched when another name of this list or another
+# organisation is found in the same sentence ("SPD und Grüne", not "ins Grüne").
+# Only names that are organisations in almost every use; products, apps and platforms are left out
+# (see eval/README.md, "What counts as an organisation").
+#
+# German, Austrian and Swiss parties
+SPD
+CDU
+CSU
+FDP
+AfD
+BSW
+Bündnis 90/Die Grünen
+Die Grünen
+Grünen ~
+Grüne ~
+Die Linke
+Linke ~
+Piratenpartei
+Freie Wähler
+ÖVP
+SPÖ
+FPÖ
+NEOS
+SVP
+FDP.Die Liberalen
+# European and UK/US parties
+Labour Party
+Conservative Party
+Liberal Democrats
+Democratic Party
+Republican Party
+# Broadcasters and news agencies
+ARD
+ZDF
+NDR
+WDR
+SWR
+MDR
+RBB
+rbb
+HR ~
+BR ~
+SR ~
+Radio Bremen
+Deutschlandfunk
+Deutsche Welle
+Deutschlandradio
+3sat
+ORF
+SRF
+Arte
+ARTE
+RTL
+ProSieben
+Sat.1
+n-tv
+ntv
+BBC
+ITV
+CNN
+NPR
+Reuters
+dpa
+AFP
+APA
+Associated Press
+Bloomberg
+# Newspapers, magazines, online media
+Die Welt
+WELT
+Welt am Sonntag
+Frankfurter Allgemeine Zeitung
+Frankfurter Allgemeine
+FAZ
+Süddeutsche Zeitung
+Süddeutsche
+SZ ~
+Der Spiegel
+Spiegel ~
+SPIEGEL
+Die Zeit
+ZEIT ~
+taz
+Handelsblatt
+Tagesspiegel
+Berliner Zeitung
+Berliner Morgenpost
+Bild-Zeitung
+Stern ~
+Focus ~
+Wirtschaftswoche
+WirtschaftsWoche
+Capital ~
+manager magazin
+Der Standard
+Die Presse
+Kurier ~
+Kronen Zeitung
+Neue Zürcher Zeitung
+NZZ
+Tages-Anzeiger
+heise online
+heise
+t3n
+Golem.de
+Gründerszene
+deutsche-startups.de
+netzpolitik.org
+Financial Times
+The Guardian
+The Times
+The New York Times
+New York Times
+The Washington Post
+Washington Post
+The Wall Street Journal
+Wall Street Journal
+The Economist
+TechCrunch
+Wired ~
+The Verge
+Le Monde
+# Public bodies, courts, chambers
+Bundesbank
+Deutsche Bundesbank
+Bundestag
+Deutscher Bundestag
+Bundesrat
+Bundesregierung
+Bundeskanzleramt
+Bundeswehr
+Bundesverfassungsgericht
+Bundesgerichtshof
+Bundeskartellamt
+Bundesnetzagentur
+Bundesagentur für Arbeit
+Bundesamt für Sicherheit in der Informationstechnik
+BSI ~
+Bundeszentrale für politische Bildung
+bpb
+Statistisches Bundesamt
+Destatis
+Europäische Zentralbank
+EZB
+European Central Bank
+ECB
+Europäische Kommission
+European Commission
+Europäisches Parlament
+European Parliament
+Vereinte Nationen
+United Nations
+UNICEF
+UNESCO
+WHO ~
+OECD
+NATO
+Nationalrat ~
+Bundeskanzleramt Österreich
+Wirtschaftskammer
+WKO
+Arbeiterkammer
+Ärztekammer
+ÄRZTEKAMMER
+Bundesärztekammer
+Rechtsanwaltskammer
+Handelskammer
+IHK
+Handwerkskammer
+Künstlersozialkasse
+KSK ~
+Finanzamt
+Amtsgericht
+Landgericht
+Oberlandesgericht
+Handelsgericht
+Verwaltungsgericht
+Bundesanstalt für Finanzdienstleistungsaufsicht
+BaFin
+Companies House
+# Associations and unions
+Bund der Steuerzahler
+ADAC
+Verdi ~
+ver.di
+IG Metall
+DGB
+Bitkom
+BDI
+DIHK
+Stiftung Warentest
+Greenpeace
+WWF
+Amnesty International
+Rotes Kreuz
+Deutsches Rotes Kreuz
+DRK
+ÖRK
+Caritas
+Diakonie
+Chaos Computer Club
+Wikimedia Deutschland
+Wikimedia Foundation
+Mozilla Foundation
+Open Knowledge Foundation
+# Companies whose name is also the platform's name
+GitHub
+Github
+GitLab
+Cloudflare
+Stack Overflow
+LinkedIn
+Linkedin
+Shutterstock
+Google
+Facebook
+Microsoft
+Salesforce
+Atlassian
+DigitalOcean
+Digital Ocean
+Hetzner
+IONOS
+Strato
+Zalando
+Deutsche Telekom
+Telekom ~
+Vodafone
+Lufthansa
+Deutsche Bahn
+SAP
+Siemens
+Bosch
+Allianz
+Commerzbank
+Deutsche Bank
+Sparkasse
+Volksbank
+N26
+PayPal
+Stripe ~
+Spotify
+Netflix
+Airbnb
+Uber
+OpenAI
+Anthropic
+Mozilla
+Wikimedia
+North Data
+NORTH DATA
+XING

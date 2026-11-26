@@ -1,4 +1,4 @@
-# Results (v0.6.0)
+# Results (v0.7.0)
 
 Produced by `python bench.py --spacy` on 2 CPU cores, shipped int8 model + pattern layer, one thread.
 
@@ -18,32 +18,33 @@ How to read this:
 - spaCy models were trained on other corpora with slightly different labelling rules; treat their scores as a reference point.
 
 ```
+== real annotated text: strict F1 on person / organisation / location, and on person alone ==
 ewt_test (English web text)
-   ours      all F1 0.646 (P 0.578 R 0.731)   person F1 0.739 (P 0.675 R 0.817)   1.33 ms/sentence
+   ours      all F1 0.646 (P 0.578 R 0.731)   person F1 0.739 (P 0.675 R 0.817)   1.25 ms/sentence
 /usr/local/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
   warnings.warn(
-   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   8.36 ms/sentence
-   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   6.14 ms/sentence
+   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   4.42 ms/sentence
+   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   4.17 ms/sentence
 wnut17_test (social media)
-   ours      all F1 0.440 (P 0.360 R 0.564)   person F1 0.504 (P 0.401 R 0.678)   1.59 ms/sentence
-   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   3.90 ms/sentence
-   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   4.34 ms/sentence
+   ours      all F1 0.440 (P 0.360 R 0.564)   person F1 0.504 (P 0.401 R 0.678)   1.50 ms/sentence
+   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   3.55 ms/sentence
+   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   3.93 ms/sentence
 btc_test (tweets)
-   ours      all F1 0.601 (P 0.591 R 0.611)   person F1 0.717 (P 0.709 R 0.726)   2.00 ms/sentence
-   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   3.87 ms/sentence
-   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   4.33 ms/sentence
+   ours      all F1 0.601 (P 0.591 R 0.611)   person F1 0.717 (P 0.709 R 0.726)   1.75 ms/sentence
+   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   3.94 ms/sentence
+   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   4.18 ms/sentence
 germeval_test (German Wikipedia/news)
-   ours      all F1 0.687 (P 0.609 R 0.789)   person F1 0.761 (P 0.688 R 0.851)   1.59 ms/sentence
-   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   4.18 ms/sentence
-   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   5.03 ms/sentence
+   ours      all F1 0.687 (P 0.609 R 0.789)   person F1 0.761 (P 0.688 R 0.851)   1.68 ms/sentence
+   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   4.10 ms/sentence
+   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   4.55 ms/sentence
 pud_de (German news/Wikipedia)
-   ours      all F1 0.694 (P 0.627 R 0.778)   person F1 0.730 (P 0.669 R 0.804)   1.78 ms/sentence
-   spaCy sm  all F1 0.642 (P 0.599 R 0.691)   person F1 0.713 (P 0.710 R 0.715)   4.12 ms/sentence
+   ours      all F1 0.694 (P 0.627 R 0.778)   person F1 0.730 (P 0.669 R 0.804)   1.71 ms/sentence
+   spaCy sm  all F1 0.642 (P 0.599 R 0.691)   person F1 0.713 (P 0.710 R 0.715)   4.07 ms/sentence
    spaCy md  all F1 0.714 (P 0.675 R 0.757)   person F1 0.796 (P 0.795 R 0.797)   4.35 ms/sentence
 
 == PII caught at all (any overlap, any label) ==
    presidio (templates unseen in training)       recall 0.975  precision 0.963
-   our synthetic, new names + new phrasing       recall 0.992  precision 0.983
+   our synthetic, new names + new phrasing       recall 0.992  precision 0.982
    ewt_test persons only                         recall 0.962
    germeval_test persons only                    recall 0.965
    wnut17_test persons only (social media)       recall 0.839
@@ -72,12 +73,12 @@ pud_de (German news/Wikipedia)
    all items found 98.6%;  by group: blog 100%, court-record 100%, data-broker 92%, de 100%, directory 100%, en 98%, forum 97%, news 100%, people-search 100%, search-engine 100%, social 100%
 
 == first / last name split (synthetic, new names + new phrasing) ==
-   F1 0.865 (P 0.871 R 0.859)
+   F1 0.865 (P 0.872 R 0.858)
 
 == latency, 1 CPU thread, 2000 texts, avg 17 tokens ==
-p50 1.47 ms   p95 3.15 ms   p99 4.11 ms
-throughput 616 texts/s, 10219 tokens/s per core
-long document (1068 tokens, 4759 chars): 89.0 ms
+p50 1.51 ms   p95 3.13 ms   p99 4.20 ms
+throughput 605 texts/s, 10039 tokens/s per core
+long document (1068 tokens, 4759 chars): 86.6 ms
 ```
 
 ## Comparison with GLiNER and GLiNER2-PII
@@ -270,6 +271,37 @@ Two changes were then made after looking at these errors (so the figures below a
 
 Company detections remain the weak point: on pages with few real companies most company hits are wrong. Persons, e-mail
 addresses, phone numbers and addresses are the reliable part of v0.3.0.
+
+## v0.7: well-known organisations and lone brand words
+
+Rules only; the model files are those of v0.6.
+
+1. `tarnkappe/model/institutions.txt` lists about 250 organisations that the tagger often misses because they carry
+   no legal form: German, Austrian and Swiss parties, broadcasters and news agencies, newspapers and online media,
+   public bodies, courts and chambers, associations, and companies whose name is also their platform's. Names are
+   matched case-sensitively as whole words (a genitive "s" and hyphenated compounds such as "SPD-Mitglied" allowed),
+   in the `pages` profile only. Ambiguous names ("Grüne", "Stern") count only when another organisation is in the
+   same sentence, so "ins Grüne" stays unmarked.
+2. A single lower-case or all-capitals word the tagger took for a person, and that is not a first name or a handle,
+   becomes a company candidate for the company check.
+3. Bug fix: a name shared across a scan because it appeared with a legal form elsewhere was dropped wherever the
+   tagger had found the same name itself; the company check then removed the tagger's copy. Present since v0.4.
+
+The labelling rule now also says that organisations inside compound words count ("SPD" in "SPD-Mitglied") and that a
+platform name counts when it is also the company's name, also where it is used as a place ("auf Facebook").
+
+**Clean test:** 18 new snippets (48 organisations, 17 persons), answers saved before labelling. Political news is
+over-represented, so parties and media are frequent.
+
+| 18 new snippets | Organisations found | Organisation detections correct | Persons found / correct |
+| --- | --- | --- | --- |
+| v0.6 | 56% | 96% | 17 of 17 / 17 of 17 |
+| v0.7 (saved answers) | **71%** | **97%** | 17 of 17 / 17 of 17 |
+| v0.7 with the bug fix of point 3 (found on this test) | 77% | 97% | 17 of 17 / 17 of 17 |
+
+**All 203 hand-labelled snippets** (most used for tuning): organisations found 72.8% → 82.1%, correct 87.5% → 88.4%,
+person detections correct 90.0% → 91.1%. Public benchmarks are unchanged from v0.6 (the rules only act in the
+`pages` profile); unseen Wikipedia companies stay at 82.6%.
 
 ## v0.6: a tagger retrained for organisations
 

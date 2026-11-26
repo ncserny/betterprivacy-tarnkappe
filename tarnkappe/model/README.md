@@ -16,6 +16,7 @@ adds regex detectors and splits PERSON into FIRST_NAME / LAST_NAME.
 | `profiles.json` | Named threshold sets; `pages` (person 0.3, organisation 0.4, company check 0.4) was chosen on hand-labelled web-page snippets | Apache 2.0 |
 | `orgcheck.onnx` | Second check on company detections (gradient-boosted trees, 107 KB) | CC BY-SA 4.0 |
 | `org_lexicon.json` | Word statistics for the company check, counted on the training corpora | CC BY-SA 4.0 |
+| `institutions.txt` | v0.7: about 250 well-known organisations without a legal form (parties, media, public bodies, associations, platform companies), matched in the `pages` profile | Apache 2.0 |
 | `metrics.json` | Test scores of the float32 model written by `train.py` | Apache 2.0 |
 
 The weights are share-alike because the training data includes UNER English EWT and Wikipedia text (both CC BY-SA 4.0).
