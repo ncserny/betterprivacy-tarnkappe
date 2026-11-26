@@ -279,7 +279,8 @@ def apply_known(text, entities, names, person_names=(), split_names=True, extra=
             keep.append(e)
         elif not clash:
             keep.append(e)
-        elif e["type"] == "ORGANIZATION" and any(e["start"] <= x["start"] and e["end"] >= x["end"] for x in clash):
+        elif e["type"] == "ORGANIZATION" and any(e["start"] <= x["start"] and e["end"] >= x["end"] for x in clash) \
+                and not any(e["start"] == x["start"] and e["end"] == x["end"] for x in clash):
             extra = [x for x in extra if x not in clash]        # the model already has the longer company span
             keep.append(e)
     return sorted(keep + extra, key=lambda e: e["start"])
