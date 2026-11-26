@@ -295,6 +295,14 @@ class Detector:
         return [] if probs is None else self.decode(toks, probs, thresholds or self.thresholds)
 
     # ---- PERSON -> FIRST_NAME / LAST_NAME ----
+    def _not_a_name(self, text, s):
+        """A lone lower-case or all-capitals word ("compuccino", "JURAWERK") that is not a first name: a brand, not a
+        person. Handled as a company candidate for the company check."""
+        w = text[s["start"]:s["end"]]
+        if not re.fullmatch(r"[^\W\d_][\w&.-]{3,}", w) or w.lower() in self.first_names:
+            return False
+        return w.islower() or (w.isupper() and len(w) >= 4)
+
     def _split_person(self, text, s):
         parts = [(m.group(), s["start"] + m.start(), s["start"] + m.end())
                  for m in re.finditer(r"[^\s,]+", text[s["start"]:s["end"]])]
@@ -364,8 +372,11 @@ class Detector:
                  and not (s["type"] == "ORG" and not_a_company(text, s))]
         if self.org_cut(profile) is not None:              # "Porsche", "Lufthansa": a lone surname-like word that
             for s in model:                                 # mostly names a company is one
-                if s["type"] == "PERSON" and (brand_not_person(text, s, self.orgcheck.lex) or employer_slot(text, s)):
+                if s["type"] == "PERSON" and (brand_not_person(text, s, self.orgcheck.lex) or employer_slot(text, s)
+                                              or self._not_a_name(text, s)):
                     s["type"] = "ORG"
+                    if not_a_company(text, s):                  # "@handle", a street: leave it as it was
+                        s["type"] = "PERSON"
         # "<Name> GmbH" is a company by rule, unless the tagger already has a longer company span around it
         rules = [r for r in legal_form_spans(text)
                  if not any(m["type"] == "ORG" and m["start"] <= r["start"] and m["end"] >= r["end"] for m in model)]
@@ -387,6 +398,9 @@ class Detector:
         if self.org_cut(profile) is not None:              # "worked at X", "bei X": proposals for the company check
             from .scan import context_company_spans
             out = sorted(out + context_company_spans(text, out, self.orgcheck.lex), key=lambda s: s["start"])
+        if self.org_cut(profile) is not None:              # NDR, Bundesbank, GitHub: well-known organisations
+            from .scan import apply_known, institution_spans
+            out = apply_known(text, out, (), extra=institution_spans(text, out))
         if known_companies:
             from .scan import apply_known
             out = apply_known(text, out, known_companies)
