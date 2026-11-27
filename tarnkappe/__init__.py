@@ -2,4 +2,4 @@
 from .detect import Detector  # noqa: F401
 from .scan import detect_scan  # noqa: F401
 
-__version__ = "0.7.1"
+__version__ = "0.7.2"

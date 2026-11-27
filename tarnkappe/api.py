@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from .detect import Detector
 
-app = FastAPI(title="PII Detector", version="0.7.1")
+app = FastAPI(title="PII Detector", version="0.7.2")
 detector = Detector()
 
 

@@ -26,3 +26,10 @@ def test_company_name_shared_after_two_pages():
     pages = ["Accel Partners and Index Ventures invested.", "Index Ventures led the round.", "Thanks to index ventures."]
     res = detect_scan(det, pages, profile="pages")
     assert any(e["type"] == "ORGANIZATION" for e in res[2])
+
+
+def test_legal_form_name_stops_at_from():
+    t = "Hi, I'm Laura Becker from Nordwind GmbH. You can reach me at laura.becker@nordwind.de."
+    ents = det.detect(t)
+    assert ("ORGANIZATION", "Nordwind GmbH") in {(e["type"], e["text"]) for e in ents}
+    assert {"Laura", "Becker"} <= {e["text"] for e in ents if e["type"] in ("FIRST_NAME", "LAST_NAME")}
