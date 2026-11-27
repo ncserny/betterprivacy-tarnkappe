@@ -1,7 +1,16 @@
 # betterprivacy-tarnkappe
 
-Fast, small detection of personal data (PII) in English and German text, built for
-[BetterPrivacy](https://betterprivacy.me).
+[![Hugging Face model](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-ndrcsr%2Ftarnkappe-yellow)](https://huggingface.co/ndrcsr/tarnkappe)
+[![Code: Apache 2.0](https://img.shields.io/badge/code-Apache%202.0-blue)](LICENSE)
+[![Weights: CC BY-SA 4.0](https://img.shields.io/badge/weights-CC%20BY--SA%204.0-lightgrey)](https://creativecommons.org/licenses/by-sa/4.0/)
+
+Find and mask personal data (PII) in German and English text for GDPR (DSGVO) work: fast, small, on a plain CPU.
+Built for [BetterPrivacy](https://betterprivacy.me). The model is also on Hugging Face:
+**[huggingface.co/ndrcsr/tarnkappe](https://huggingface.co/ndrcsr/tarnkappe)**.
+
+| Before | After |
+| --- | --- |
+| Hallo, ich bin Laura Becker von der Nordwind GmbH in Hamburg. Erreichbar unter 0171 3920045 oder laura.becker@nordwind.de. | Hallo, ich bin [FIRST_NAME] [LAST_NAME] von der [ORGANIZATION] in [LOCATION]. Erreichbar unter [PHONE] oder [EMAIL]. |
 
 *Tarnkappe* is the cloak of invisibility from German legend. This library finds the personal
 data in a text so it can be flagged or hidden.
@@ -11,8 +20,8 @@ data in a text so it can be flagged or hidden.
 - **Private:** runs locally; text is processed in memory and never logged or stored.
 - **Open:** code, weights, training script and benchmark are all in this repository.
 
-> **Status: v0.3 in development, prototype.** Good for its size and on edited text, weak on informal text,
-> and not yet at its own [release bar](#release-bar). Read [Limits](#limits) before relying on it.
+> **Status: v0.7.2.** Meets its [release bar](#release-bar) for persons and organisations on the largest clean test
+> of real web pages; weaker on informal text. Read [Limits](#limits) before relying on it.
 
 ## What it detects
 
