@@ -1,4 +1,4 @@
-# Results (v0.7.1)
+# Results (v0.7.2)
 
 Produced by `python bench.py --spacy` on 2 CPU cores, shipped int8 model + pattern layer, one thread.
 
@@ -18,33 +18,35 @@ How to read this:
 - spaCy models were trained on other corpora with slightly different labelling rules; treat their scores as a reference point.
 
 ```
+   -> Posted by [FIRST_NAME] [LAST_NAME] on Tuesday: does anyone know a good dentist in [LOCATION]?
+
 == real annotated text: strict F1 on person / organisation / location, and on person alone ==
 ewt_test (English web text)
-   ours      all F1 0.646 (P 0.578 R 0.731)   person F1 0.739 (P 0.675 R 0.817)   1.25 ms/sentence
+   ours      all F1 0.646 (P 0.578 R 0.731)   person F1 0.739 (P 0.675 R 0.817)   1.37 ms/sentence
 /usr/local/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
   warnings.warn(
-   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   4.42 ms/sentence
-   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   4.17 ms/sentence
+   spaCy sm  all F1 0.568 (P 0.558 R 0.578)   person F1 0.633 (P 0.650 R 0.617)   7.96 ms/sentence
+   spaCy md  all F1 0.641 (P 0.619 R 0.664)   person F1 0.755 (P 0.751 R 0.759)   5.55 ms/sentence
 wnut17_test (social media)
-   ours      all F1 0.440 (P 0.360 R 0.564)   person F1 0.504 (P 0.401 R 0.678)   1.50 ms/sentence
-   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   3.55 ms/sentence
-   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   3.93 ms/sentence
+   ours      all F1 0.440 (P 0.360 R 0.564)   person F1 0.504 (P 0.401 R 0.678)   1.72 ms/sentence
+   spaCy sm  all F1 0.248 (P 0.230 R 0.269)   person F1 0.274 (P 0.283 R 0.266)   4.00 ms/sentence
+   spaCy md  all F1 0.276 (P 0.243 R 0.319)   person F1 0.356 (P 0.414 R 0.312)   4.52 ms/sentence
 btc_test (tweets)
-   ours      all F1 0.601 (P 0.591 R 0.611)   person F1 0.717 (P 0.709 R 0.726)   1.75 ms/sentence
-   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   3.94 ms/sentence
-   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   4.18 ms/sentence
+   ours      all F1 0.601 (P 0.591 R 0.611)   person F1 0.717 (P 0.709 R 0.726)   1.92 ms/sentence
+   spaCy sm  all F1 0.260 (P 0.333 R 0.214)   person F1 0.221 (P 0.319 R 0.170)   4.42 ms/sentence
+   spaCy md  all F1 0.309 (P 0.389 R 0.256)   person F1 0.295 (P 0.485 R 0.212)   4.44 ms/sentence
 germeval_test (German Wikipedia/news)
-   ours      all F1 0.687 (P 0.609 R 0.789)   person F1 0.761 (P 0.688 R 0.851)   1.68 ms/sentence
-   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   4.10 ms/sentence
-   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   4.55 ms/sentence
+   ours      all F1 0.687 (P 0.609 R 0.789)   person F1 0.761 (P 0.688 R 0.851)   1.56 ms/sentence
+   spaCy sm  all F1 0.606 (P 0.545 R 0.682)   person F1 0.697 (P 0.672 R 0.723)   4.09 ms/sentence
+   spaCy md  all F1 0.656 (P 0.601 R 0.722)   person F1 0.768 (P 0.753 R 0.783)   4.88 ms/sentence
 pud_de (German news/Wikipedia)
    ours      all F1 0.694 (P 0.627 R 0.778)   person F1 0.730 (P 0.669 R 0.804)   1.71 ms/sentence
-   spaCy sm  all F1 0.642 (P 0.599 R 0.691)   person F1 0.713 (P 0.710 R 0.715)   4.07 ms/sentence
-   spaCy md  all F1 0.714 (P 0.675 R 0.757)   person F1 0.796 (P 0.795 R 0.797)   4.35 ms/sentence
+   spaCy sm  all F1 0.642 (P 0.599 R 0.691)   person F1 0.713 (P 0.710 R 0.715)   3.74 ms/sentence
+   spaCy md  all F1 0.714 (P 0.675 R 0.757)   person F1 0.796 (P 0.795 R 0.797)   4.06 ms/sentence
 
 == PII caught at all (any overlap, any label) ==
    presidio (templates unseen in training)       recall 0.975  precision 0.963
-   our synthetic, new names + new phrasing       recall 0.992  precision 0.982
+   our synthetic, new names + new phrasing       recall 0.991  precision 0.982
    ewt_test persons only                         recall 0.962
    germeval_test persons only                    recall 0.965
    wnut17_test persons only (social media)       recall 0.839
@@ -73,12 +75,12 @@ pud_de (German news/Wikipedia)
    all items found 98.6%;  by group: blog 100%, court-record 100%, data-broker 92%, de 100%, directory 100%, en 98%, forum 97%, news 100%, people-search 100%, search-engine 100%, social 100%
 
 == first / last name split (synthetic, new names + new phrasing) ==
-   F1 0.865 (P 0.872 R 0.858)
+   F1 0.885 (P 0.874 R 0.897)
 
 == latency, 1 CPU thread, 2000 texts, avg 17 tokens ==
-p50 1.51 ms   p95 3.13 ms   p99 4.20 ms
-throughput 605 texts/s, 10039 tokens/s per core
-long document (1068 tokens, 4759 chars): 86.6 ms
+p50 1.44 ms   p95 2.81 ms   p99 3.38 ms
+throughput 645 texts/s, 10706 tokens/s per core
+long document (1068 tokens, 4759 chars): 73.4 ms
 ```
 
 ## Comparison with GLiNER and GLiNER2-PII
@@ -271,6 +273,17 @@ Two changes were then made after looking at these errors (so the figures below a
 
 Company detections remain the weak point: on pages with few real companies most company hits are wrong. Persons, e-mail
 addresses, phone numbers and addresses are the reliable part of v0.3.0.
+
+## v0.7.2: legal-form names stop at "from" and "bei"
+
+Bug fix in the legal-form rule. It took up to five words before "GmbH", "Inc." and the like as the company name, so
+"Hi, I'm Laura Becker from Nordwind GmbH" became one company "I'm Laura Becker from Nordwind GmbH" and the person was
+not found. The name now starts after the last word such as "from", "at", "bei", "by", "with", "seit" or "is" in front
+of the legal form ("Nordwind GmbH"). Words that can be part of a name ("für", "am", "of", "und") still are
+("Gesellschaft für Informatik e.V.", "Bank of America Corp."). A unit test covers the example.
+
+The scores on all hand-labelled real pages, the 45-snippet clean test and the public benchmarks are unchanged
+(the generated test sentences: 99.2% → 99.1% found).
 
 ## v0.7.1: the largest clean test so far
 

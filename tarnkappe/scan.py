@@ -32,6 +32,8 @@ COMPANY = re.compile(r"(?<![\w@.-])((?:" + _CAP + r"[ \t]+(?:&[ \t]+)?){0,4}(?:"
 RISKY = {"AB", "SE", "SAS", "Oy", "BV", "NV", "AG", "SA", "SA.", "SL", "SLU", "LP", "AS", "SPA", "SpA"}             # short forms that are also ordinary words or model names
 LEADING = {"die", "der", "das", "den", "dem", "des", "the", "bei", "von", "vom", "für", "mit", "im", "in", "an", "am", "und", "and", "at",
            "by", "for", "with", "als", "zur", "zum", "a", "an", "of", "from", "seit", "since", "auch", "laut", "ein", "eine"}
+# lower-case words that end a sentence part before a company name; never inside one ("für", "am" and "of" can be)
+CUT = {"from", "at", "bei", "by", "with", "since", "seit", "laut", "via", "zu", "zur", "zum", "vs", "versus", "is", "ist", "was", "war"}
 SUFFIX = re.compile(r"[\s,]+" + LEGAL + r"(?:\s*\(haftungsbeschränkt\))?\s*$")
 ACRONYM = re.compile(r"^\s*\(([A-ZÄÖÜ]{2,6})\)")
 # words that are not a company name on their own
@@ -46,6 +48,12 @@ def legal_form_spans(text):
     for m in COMPANY.finditer(text):
         a = m.start()
         words = m.group(1).split()
+        cut = [i for i, w in enumerate(words[:-1]) if w in CUT]     # "I'm Laura Becker from Nordwind GmbH" -> "Nordwind GmbH"
+        if cut:
+            for w in words[:cut[-1] + 1]:
+                a = text.index(w, a) + len(w)
+            a = text.index(words[cut[-1] + 1], a)
+            words = words[cut[-1] + 1:]
         while len(words) > 1 and words[0].lower() in LEADING:      # "Die Nordwind GmbH" -> "Nordwind GmbH"
             a = text.index(words[1], a + len(words[0]))
             words.pop(0)
