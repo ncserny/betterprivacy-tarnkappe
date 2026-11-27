@@ -1,4 +1,4 @@
-# Results (v0.7.0)
+# Results (v0.7.1)
 
 Produced by `python bench.py --spacy` on 2 CPU cores, shipped int8 model + pattern layer, one thread.
 
@@ -271,6 +271,27 @@ Two changes were then made after looking at these errors (so the figures below a
 
 Company detections remain the weak point: on pages with few real companies most company hits are wrong. Persons, e-mail
 addresses, phone numbers and addresses are the reliable part of v0.3.0.
+
+## v0.7.1: the largest clean test so far
+
+No code change; this release documents a new hand-labelled test. Five more people agreed to be scanned. Their pages
+were turned into 45 snippets (141 organisations, 60 persons) and labelled with the rule in
+[eval/README.md](eval/README.md). The answers of v0.6 and v0.7 were saved before labelling; nothing was tuned on these
+snippets. The texts stay private and are used for testing only, never for training.
+
+| 45 new snippets | Persons found | Person detections correct | Organisations found | Organisation detections correct |
+| --- | --- | --- | --- | --- |
+| v0.6 | 100% | 92.1% | 86.5% | 89.7% |
+| v0.7 | **100%** | **92.1%** | **87.9%** | **89.9%** |
+| Release bar | 95% | 85% (all detections) | 80% | 85% (all detections) |
+
+With 141 organisations, the 95% range for organisations found is about 83–93%, so the bar is met on this test. The
+pages are mostly business profiles, press releases and interviews, where organisations are named clearly; the smaller
+18-snippet test of v0.7 (political news and blogs) gave 71%, so the figure depends on the kind of page.
+
+What is still missed: small startup and conference brand names without context (some taken for persons), a
+university name in a list, and a barristers' chambers. What is wrongly marked: job-title fragments ("Platform
+Solutions", "EVP"), a phrase like "independent films", one city, and product or event names taken for persons.
 
 ## v0.7: well-known organisations and lone brand words
 

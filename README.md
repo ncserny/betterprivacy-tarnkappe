@@ -161,7 +161,9 @@ tuned on its training split, and the 99.2% is from its held-out test split (v0.4
 
 | | Persons found | Person detections correct | Organisations found | Organisation detections correct |
 | --- | --- | --- | --- | --- |
-| **v0.7**, fresh test: 18 snippets, never tuned on (48 organisations, 17 persons) | 100% | 100% | **71%** | **97%** |
+| **v0.7**, largest fresh test: 45 snippets from five new scans, never tuned on (141 organisations, 60 persons) | 100% | 92% | **88%** | **90%** |
+| v0.6 on the same 45 snippets | 100% | 92% | 87% | 90% |
+| v0.7, fresh test: 18 snippets, never tuned on (48 organisations, 17 persons) | 100% | 100% | **71%** | **97%** |
 | v0.6 on the same 18 snippets | 100% | 100% | 56% | 96% |
 | v0.7 with a fix found on that test, same 18 snippets | 100% | 100% | 77% | 97% |
 | v0.7 on all 203 labelled snippets (mostly used for tuning) | 99% | 91% | 82% | 88% |
@@ -254,9 +256,12 @@ These hand labels are used for testing, not for training.
 before it is called production-ready: persons found 95%, email and IBAN 99%, phone 95%, street and postcode 90%,
 location 85%, organisation 80%, and at least 85% of detections real.
 
-Status for v0.7.0: **met for organisation detections that are correct; not for organisations found.** On 18 snippets
-nothing was tuned on, 97% of organisation detections are correct (bar 85%) but 71% of organisations are found
-(bar 80%); across all 203 labelled snippets, most of them used for tuning, 82% are found. Persons found was 99% on the 57-snippet clean test of v0.5 (bar 95%); the v0.6 test has too few persons to say. Phones, postcodes and addresses are not hand-labelled on real pages yet.
+Status for v0.7: **met for persons and organisations on the largest clean test.** On 45 snippets from five new
+consenting people's scans, never used for tuning (141 organisations, 60 persons), v0.7 finds 87.9% of organisations
+(bar 80%; 95% range about 83–93%) with 89.9% of its organisation detections correct (bar 85%), and 100% of persons
+with 92.1% of person detections correct. These pages are mostly business profiles and press releases. On a smaller
+clean test dominated by blog and political news text (18 snippets) organisations found was 71%, so expect lower
+figures on such pages. Phones, postcodes and addresses are not hand-labelled on real pages yet.
 Details are in [RESULTS.md](RESULTS.md); see [eval/README.md](eval/README.md) for how to score against the bar
 (`python bench.py --testset <file> --gate`).
 
@@ -268,7 +273,7 @@ grows in proportion to length. The HTTP API accepts up to 100,000 characters per
 
 ## Limits
 
-- **Organisations without a legal form** are often missed on real pages (about 71% found on a clean test). Domain-style names ("example.fm") and platform names are missed most.
+- **Organisations without a legal form** are often missed on real pages (88% found on business pages and 71% on political news in clean tests). Small startup and event brands with no context, and domain-style names ("example.fm"), are missed most; job-title fragments are sometimes marked as organisations.
 - **Weaker on informal text.** On social-media text it finds about 83 to 85% of persons and under half of its person detections there are right; GLiNER2-PII finds about 96% with a similar error rate.
 - **English and German only.**
 - **Weak spots:** nicknames and lower-case names in social-media text, phone numbers from countries outside the configured regions when no word like "Tel." or "contact" stands next to them, postcodes in free text without an address around them.
